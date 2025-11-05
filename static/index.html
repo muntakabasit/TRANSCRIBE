@@ -498,15 +498,26 @@
             error.classList.remove('active');
             
             try {
+                console.log('Starting transcription:', { url, lang });
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000);
+                
                 const response = await fetch('/transcribe', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ url: url, lang: lang })
+                    body: JSON.stringify({ url: url, lang: lang }),
+                    signal: controller.signal
                 });
                 
+                clearTimeout(timeoutId);
+                
+                console.log('Response status:', response.status);
+                
                 const data = await response.json();
+                console.log('Response data:', data);
                 
                 if (!response.ok) {
                     throw new Error(data.detail || 'Transcription failed');
@@ -515,7 +526,12 @@
                 displayResults(data);
                 
             } catch (err) {
-                showError(err.message);
+                console.error('Transcription error:', err);
+                if (err.name === 'AbortError') {
+                    showError('Request timed out. Video may be too long.');
+                } else {
+                    showError(err.message || 'An error occurred');
+                }
             } finally {
                 btn.disabled = false;
                 loading.classList.remove('active');
