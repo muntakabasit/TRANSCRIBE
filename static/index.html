@@ -119,7 +119,8 @@
             margin-right: 5px;
         }
         
-        .input-group input {
+        .input-group input,
+        .input-group select {
             width: 100%;
             padding: 18px;
             border: 2px solid #000;
@@ -129,7 +130,8 @@
             transition: all 0.2s;
         }
         
-        .input-group input:focus {
+        .input-group input:focus,
+        .input-group select:focus {
             outline: none;
             border-width: 3px;
             padding: 17px;
@@ -138,6 +140,13 @@
         .input-group input::placeholder {
             color: #999;
             font-style: italic;
+        }
+        
+        .input-group select {
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
         }
         
         .btn {
@@ -409,6 +418,24 @@
                 >
             </div>
             
+            <div class="input-group">
+                <label for="lang">Language / Dialect</label>
+                <select id="lang">
+                    <option value="en">English (Auto-detect)</option>
+                    <option value="pidgin">Pidgin (GH/NG)</option>
+                    <option value="twi">Twi</option>
+                    <option value="igbo">Igbo</option>
+                    <option value="yoruba">Yoruba</option>
+                    <option value="hausa">Hausa</option>
+                    <option value="swahili">Swahili</option>
+                    <option value="amharic">Amharic</option>
+                    <option value="french">French</option>
+                    <option value="portuguese">Portuguese</option>
+                    <option value="ewe">Ewe</option>
+                    <option value="dagbani">Dagbani</option>
+                </select>
+            </div>
+            
             <button class="btn" onclick="transcribe()">Process</button>
             
             <div class="loading" id="loading">
@@ -453,6 +480,7 @@
         async function transcribe() {
             const urlInput = document.getElementById('url');
             const url = urlInput.value.trim();
+            const lang = document.getElementById('lang').value;
             
             if (!url) {
                 showError('Please enter a video URL');
@@ -475,7 +503,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ url: url })
+                    body: JSON.stringify({ url: url, lang: lang })
                 });
                 
                 const data = await response.json();
@@ -496,7 +524,10 @@
         
         function displayResults(data) {
             document.getElementById('duration').textContent = formatTime(data.duration);
-            document.getElementById('language').textContent = data.language.toUpperCase();
+            const langDisplay = data.detected_mt && data.detected_mt !== 'en' 
+                ? `${data.language.toUpperCase()} (${data.detected_mt.toUpperCase()})`
+                : data.language.toUpperCase();
+            document.getElementById('language').textContent = langDisplay;
             document.getElementById('segmentCount').textContent = data.segments.length;
             document.getElementById('transcript').textContent = data.full_text;
             
@@ -506,9 +537,14 @@
             data.segments.forEach(segment => {
                 const segmentEl = document.createElement('div');
                 segmentEl.className = 'segment';
+                const enhancedText = segment.text_enhanced 
+                    ? `<div class="text" style="font-style: italic; color: #000; margin-bottom: 8px;">${segment.text}</div>
+                       <div class="text" style="font-weight: 700; color: #000;">→ ${segment.text_enhanced}</div>`
+                    : `<div class="text">${segment.text}</div>`;
+                
                 segmentEl.innerHTML = `
                     <div class="time">${formatTime(segment.start)} - ${formatTime(segment.end)}</div>
-                    <div class="text">${segment.text}</div>
+                    ${enhancedText}
                 `;
                 segmentsContainer.appendChild(segmentEl);
             });
