@@ -27,9 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logger.info("Loading Whisper base model...")
-model = whisper.load_model("base")
-logger.info("Whisper model loaded successfully")
+logger.info("Loading Whisper tiny model for maximum speed...")
+model = whisper.load_model("tiny")
+logger.info("Whisper tiny model loaded successfully")
 
 logger.info("Loading multilingual MT models...")
 lang_models = {}
