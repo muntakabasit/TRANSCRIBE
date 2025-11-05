@@ -33,3 +33,6 @@ externalPort = 80
 [nix]
 channel = "stable-25_05"
 packages = ["ffmpeg", "ffmpeg-full", "pkg-config"]
+
+[deployment]
+deploymentTarget = "cloudrun"
