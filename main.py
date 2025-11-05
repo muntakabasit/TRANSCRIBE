@@ -1,21 +1,31 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 import whisper
 import yt_dlp
 import tempfile
 import os
 import logging
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, validator
+from typing import Optional, Dict, Any
 from transformers import MT5ForConditionalGeneration, MT5Tokenizer, MarianMTModel, MarianTokenizer
 import torch
+import time
+from datetime import datetime
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="DAWT-Transcribe v2.0")
+VERSION = "2.0.0"
+app = FastAPI(
+    title="DAWT-Transcribe",
+    version=VERSION,
+    description="Sovereign audio transcription with multilingual enhancement"
+)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -75,50 +85,130 @@ class TranscribeRequest(BaseModel):
     url: Optional[str] = None
     file_path: Optional[str] = None
     lang: str = "en"
+    
+    @validator('lang')
+    def validate_lang(cls, v):
+        valid_langs = ["en", "pidgin", "twi", "igbo", "yoruba", "hausa", 
+                       "swahili", "amharic", "french", "portuguese", "ewe", "dagbani"]
+        if v not in valid_langs:
+            raise ValueError(f"Invalid language. Must be one of: {', '.join(valid_langs)}")
+        return v
+    
+    @validator('url')
+    def validate_url(cls, v):
+        if v and not (v.startswith('http://') or v.startswith('https://')):
+            raise ValueError("URL must start with http:// or https://")
+        return v
+
+@app.get("/health")
+async def health_check():
+    return JSONResponse({
+        "status": "healthy",
+        "version": VERSION,
+        "whisper_model": "tiny",
+        "mt_available": len(lang_models) > 0,
+        "supported_languages": len(lang_models) + 1,
+        "timestamp": datetime.utcnow().isoformat()
+    })
+
+@app.get("/api/info")
+async def api_info():
+    return JSONResponse({
+        "name": "DAWT-Transcribe",
+        "version": VERSION,
+        "description": "Sovereign audio transcription with multilingual enhancement",
+        "features": {
+            "whisper_model": "tiny",
+            "mt_models": list(lang_models.keys()) if lang_models else [],
+            "supported_platforms": ["TikTok", "Instagram", "YouTube", "Local Files"],
+            "output_format": "JSON with timestamped segments"
+        },
+        "sovereignty": "100% local processing - no cloud APIs"
+    })
 
 @app.post("/transcribe")
 async def transcribe(request: TranscribeRequest):
+    start_time = time.time()
+    request_id = f"req_{int(time.time() * 1000)}"
+    
+    logger.info(f"[{request_id}] New transcription request - lang: {request.lang}")
+    
     if not request.url and not request.file_path:
-        raise HTTPException(status_code=400, detail="Provide URL or file_path")
+        logger.error(f"[{request_id}] Missing input: no URL or file_path provided")
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "error": "missing_input",
+                "message": "Provide either 'url' or 'file_path'",
+                "request_id": request_id
+            }
+        )
     
     audio_path = None
     is_temp_file = False
     
     try:
         if request.url:
+            logger.info(f"[{request_id}] Downloading audio from URL...")
             is_temp_file = True
             ydl_opts = {
                 'format': 'bestaudio/best',
                 'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
                 'quiet': True,
+                'no_warnings': True,
             }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(request.url, download=True)
-                audio_path = ydl.prepare_filename(info)
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(request.url, download=True)
+                    audio_path = ydl.prepare_filename(info)
+                logger.info(f"[{request_id}] Audio downloaded successfully")
+            except Exception as e:
+                logger.error(f"[{request_id}] Download failed: {str(e)}")
+                raise HTTPException(
+                    status_code=400,
+                    detail={
+                        "error": "download_failed",
+                        "message": "Could not download audio from URL. Check URL validity.",
+                        "request_id": request_id
+                    }
+                )
         else:
             audio_path = request.file_path
         
         if not audio_path or not os.path.exists(audio_path):
-            logger.error(f"Audio file not found: {audio_path}")
-            raise HTTPException(status_code=500, detail="Audio file not accessible")
+            logger.error(f"[{request_id}] Audio file not found: {audio_path}")
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "file_not_found",
+                    "message": "Audio file not accessible",
+                    "request_id": request_id
+                }
+            )
         
-        logger.info(f"Transcribing with Whisper: {audio_path}")
+        logger.info(f"[{request_id}] Starting Whisper transcription...")
+        whisper_start = time.time()
         result = model.transcribe(audio_path)
+        whisper_time = time.time() - whisper_start
+        logger.info(f"[{request_id}] Whisper completed in {whisper_time:.2f}s")
         
         segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
         full_text = result["text"]
         
         detected_lang = request.lang
+        mt_enhanced = False
+        
         if detected_lang == "en" and lang_models:
             for lang_key, keywords in lang_keywords.items():
                 if any(kw.lower() in full_text.lower() for kw in keywords):
                     detected_lang = lang_key
-                    logger.info(f"Auto-detected language: {detected_lang}")
+                    logger.info(f"[{request_id}] Auto-detected language: {detected_lang}")
                     break
         
         if detected_lang != "en" and lang_models and detected_lang in lang_models:
             try:
-                logger.info(f"Enhancing transcription with {detected_lang} MT...")
+                logger.info(f"[{request_id}] Enhancing transcription with {detected_lang} MT...")
+                mt_start = time.time()
                 lm = lang_models[detected_lang]
                 texts = [seg["text"] for seg in segments]
                 
@@ -143,36 +233,56 @@ async def transcribe(request: TranscribeRequest):
                 for i, seg in enumerate(segments):
                     if trans_texts[i].strip() and trans_texts[i] != seg["text"]:
                         seg["text_enhanced"] = trans_texts[i]
+                        mt_enhanced = True
                 
-                logger.info(f"Translation enhancement complete for {detected_lang}")
+                mt_time = time.time() - mt_start
+                logger.info(f"[{request_id}] Translation enhancement complete in {mt_time:.2f}s")
             except Exception as e:
-                logger.warning(f"Translation failed: {e}. Returning Whisper output only.")
+                logger.warning(f"[{request_id}] Translation failed: {e}. Returning Whisper output only.")
         
         if is_temp_file and audio_path and os.path.exists(audio_path):
             try:
                 os.remove(audio_path)
-                logger.info(f"Cleaned up temporary file: {audio_path}")
+                logger.info(f"[{request_id}] Cleaned up temporary file: {audio_path}")
             except Exception as e:
-                logger.warning(f"Failed to cleanup temp file {audio_path}: {e}")
+                logger.warning(f"[{request_id}] Failed to cleanup temp file {audio_path}: {e}")
         
-        return {
+        processing_time = time.time() - start_time
+        logger.info(f"[{request_id}] ✅ Transcription complete in {processing_time:.2f}s")
+        
+        return JSONResponse({
+            "success": True,
+            "request_id": request_id,
             "full_text": full_text,
             "segments": segments,
             "language": result["language"],
             "detected_mt": detected_lang,
-            "duration": result["segments"][-1]["end"] if segments else 0
-        }
+            "mt_enhanced": mt_enhanced,
+            "duration": result["segments"][-1]["end"] if segments else 0,
+            "segment_count": len(segments),
+            "processing_time": round(processing_time, 2),
+            "timestamp": datetime.utcnow().isoformat()
+        })
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Transcription error: {type(e).__name__}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Transcription failed. Please check your audio file or URL.")
+        logger.error(f"[{request_id}] ❌ Transcription error: {type(e).__name__}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "transcription_failed",
+                "message": "Transcription failed. Please check your audio file or URL.",
+                "error_type": type(e).__name__,
+                "request_id": request_id
+            }
+        )
     finally:
         if is_temp_file and audio_path and os.path.exists(audio_path):
             try:
                 os.remove(audio_path)
-            except:
-                pass
+                logger.debug(f"[{request_id}] Cleanup: removed temp file")
+            except Exception as cleanup_err:
+                logger.debug(f"[{request_id}] Cleanup warning: {cleanup_err}")
 
 @app.get("/")
 def root():

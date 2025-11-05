@@ -520,7 +520,12 @@
                 console.log('Response data:', data);
                 
                 if (!response.ok) {
-                    throw new Error(data.detail || 'Transcription failed');
+                    const errorMsg = data.detail?.message || data.detail || 'Transcription failed';
+                    throw new Error(errorMsg);
+                }
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Transcription failed');
                 }
                 
                 displayResults(data);
@@ -541,11 +546,15 @@
         function displayResults(data) {
             document.getElementById('duration').textContent = formatTime(data.duration);
             const langDisplay = data.detected_mt && data.detected_mt !== 'en' 
-                ? `${data.language.toUpperCase()} (${data.detected_mt.toUpperCase()})`
+                ? `${data.language.toUpperCase()} (${data.detected_mt.toUpperCase()}${data.mt_enhanced ? ' ✓' : ''})`
                 : data.language.toUpperCase();
             document.getElementById('language').textContent = langDisplay;
-            document.getElementById('segmentCount').textContent = data.segments.length;
+            document.getElementById('segmentCount').textContent = data.segment_count || data.segments.length;
             document.getElementById('transcript').textContent = data.full_text;
+            
+            if (data.processing_time) {
+                console.log(`✅ Transcribed in ${data.processing_time}s [${data.request_id}]`);
+            }
             
             const segmentsContainer = document.getElementById('segments');
             segmentsContainer.innerHTML = '';

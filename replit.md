@@ -21,6 +21,17 @@ DAWT-Transcribe v2.0 is a sovereign audio transcription API with multilingual en
 - Graceful fallback when MT models unavailable
 
 ## Recent Changes
+- **2025-11-05 v2.0.0:** Production-robust upgrade
+  - **Robust API Structure:** Request IDs, processing time metrics, structured error responses
+  - **Health Monitoring:** `/health` endpoint for server status checks
+  - **API Info:** `/api/info` endpoint showing capabilities and sovereignty status
+  - **Better Validation:** Input validation on URL format and language codes
+  - **Professional Logging:** Timestamped logs with request tracking `[req_123456]`
+  - **Error Handling:** Specific error codes (download_failed, file_not_found, transcription_failed)
+  - **Response Metadata:** Success flags, request IDs, segment counts, processing times
+  - **Timing Metrics:** Track Whisper and MT processing times separately
+  - **Enhanced Frontend:** Shows MT enhancement status with ✓ indicator
+
 - **2025-11-05 v2.0:** Multilingual upgrade + Virgil Abloh design
   - Added mT5-small MT models for 11 African/European languages
   - Implemented keyword-based language detection
@@ -46,9 +57,15 @@ DAWT-Transcribe v2.0 is a sovereign audio transcription API with multilingual en
 
 ### Key Endpoints
 - `GET /`: Virgil Abloh UI interface
+- `GET /health`: Server health check with model status
+  - Returns: status, version, whisper_model, mt_available, supported_languages, timestamp
+- `GET /api/info`: API capabilities and feature list
+  - Returns: name, version, features, supported platforms, sovereignty status
 - `POST /transcribe`: Main transcription endpoint
   - Accepts: `url` (TikTok/Instagram/YouTube), `file_path` (local file), `lang` (language code)
-  - Returns: full transcript, timestamped segments, language, detected_mt, duration, text_enhanced (when MT succeeds)
+  - Returns: success, request_id, full_text, segments, language, detected_mt, mt_enhanced, duration, segment_count, processing_time, timestamp
+  - Validates: URL format (must start with http/https), language codes (12 supported languages)
+  - Error codes: missing_input, download_failed, file_not_found, transcription_failed
 
 ### Supported Languages (v2.0)
 1. **English** (auto-detect, default)
@@ -128,16 +145,25 @@ DAWT-Transcribe v2.0 is a sovereign audio transcription API with multilingual en
 - AutoCut JSON format: Direct integration with beat-synced editing workflow
 - MarianMT models: Higher-fidelity translations for specific language pairs
 
-## Testing Workflow (v2.0)
-1. Open web interface (Virgil Abloh UI)
-2. Paste TikTok/Instagram/YouTube URL
-3. Select language (or leave as "English (Auto-detect)")
-4. Click **PROCESS** → button
-5. Review results:
-   - Full transcript with detected language
+## Testing Workflow (v2.0.0)
+1. **Health Check:** `curl /health` to verify server status
+2. Open web interface (Virgil Abloh UI)
+3. Paste TikTok/Instagram/YouTube URL
+4. Select language (or leave as "English (Auto-detect)")
+5. Click **PROCESS** → button
+6. Review results:
+   - Full transcript with detected language (✓ shows MT enhancement active)
    - Timestamped segments (enhanced translations shown with → arrow)
-   - Duration, language code, segment count
-6. Export JSON segments to Notes for AutoCut integration
+   - Duration, language code, segment count, processing time
+   - Browser console shows: `✅ Transcribed in Xs [req_id]`
+7. Export JSON segments to Notes for AutoCut integration
+
+### Testing Robust Features
+- **Health:** `curl localhost:5000/health`
+- **Info:** `curl localhost:5000/api/info`
+- **Invalid URL:** Submit malformed URL → see structured error response
+- **Invalid Lang:** Use unsupported language → see validation error
+- **Console Logs:** Check for `[req_123456]` request tracking in server logs
 
 ## Notes
 - Whisper base model processes ~1-2 mins per clip
