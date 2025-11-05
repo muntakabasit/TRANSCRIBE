@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import whisper
 import yt_dlp
 import tempfile
@@ -12,6 +14,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="DAWT-Transcribe v1")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -78,7 +82,7 @@ async def transcribe(request: TranscribeRequest):
 
 @app.get("/")
 def root():
-    return {"status": "DAWT-Transcribe running", "endpoints": ["/transcribe (POST JSON)"]}
+    return FileResponse("static/index.html")
 
 if __name__ == "__main__":
     import uvicorn
