@@ -44,4 +44,5 @@ channel = "stable-25_05"
 packages = ["ffmpeg", "ffmpeg-full", "libxcrypt", "pkg-config"]
 
 [deployment]
-deploymentTarget = "cloudrun"
+deploymentTarget = "autoscale"
+run = ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
