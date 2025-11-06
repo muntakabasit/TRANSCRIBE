@@ -44,6 +44,30 @@
             margin-bottom: 60px;
             border-bottom: 3px solid #000;
             padding-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .nav-history {
+            background: #000;
+            color: #fff;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        
+        .nav-history:hover {
+            background: #333;
         }
         
         .header h1 {
@@ -385,6 +409,30 @@
             display: block;
         }
         
+        .copy-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            font-weight: 700;
+            font-size: 0.75em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-left: 15px;
+        }
+        
+        .copy-btn:hover {
+            background: #333;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 3em;
@@ -403,8 +451,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>TRANSCRIBE</h1>
-            <p>Audio to text / TikTok, Instagram, YouTube / Local processing</p>
+            <div class="header-content">
+                <h1>TRANSCRIBE</h1>
+                <p>Audio to text / TikTok, Instagram, YouTube / Local processing</p>
+            </div>
+            <a href="/static/history.html" class="nav-history">My Transcripts →</a>
         </div>
         
         <div class="card">
@@ -436,7 +487,14 @@
                 </select>
             </div>
             
-            <button class="btn" onclick="transcribe()">Process</button>
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label style="margin-bottom: 10px;">
+                    <input type="checkbox" id="asyncMode" checked style="width: auto; margin-right: 10px;">
+                    Submit & Go (Get notified when ready - faster!)
+                </label>
+            </div>
+            
+            <button class="btn" onclick="handleSubmit()">Process →</button>
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
@@ -465,19 +523,50 @@
             </div>
             
             <div class="transcript-box">
-                <h3>Full Transcript</h3>
+                <div class="section-header">
+                    <h3>Full Transcript</h3>
+                    <button class="copy-btn" onclick="copyTranscript()">Copy Text</button>
+                </div>
                 <div class="transcript-text" id="transcript"></div>
             </div>
             
             <div class="segments" id="segmentsContainer">
-                <h3>Timestamped Segments</h3>
+                <div class="section-header">
+                    <h3>Timestamped Segments</h3>
+                    <button class="copy-btn" onclick="copySegments()">Copy JSON</button>
+                </div>
                 <div id="segments"></div>
             </div>
         </div>
     </div>
     
     <script>
-        async function transcribe() {
+        let pollingInterval = null;
+        
+        async function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                await Notification.requestPermission();
+            }
+        }
+        
+        function showNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, { body, icon: '/static/favicon.ico' });
+            }
+        }
+        
+        async function handleSubmit() {
+            const asyncMode = document.getElementById('asyncMode').checked;
+            
+            if (asyncMode) {
+                await requestNotificationPermission();
+                await submitAsync();
+            } else {
+                await transcribeSync();
+            }
+        }
+        
+        async function submitAsync() {
             const urlInput = document.getElementById('url');
             const url = urlInput.value.trim();
             const lang = document.getElementById('lang').value;
@@ -498,6 +587,89 @@
             error.classList.remove('active');
             
             try {
+                const response = await fetch('/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, lang })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Submission failed');
+                }
+                
+                console.log('Job submitted:', data.job_id);
+                loading.querySelector('p').textContent = `Job submitted! (${data.job_id})`;
+                
+                pollJobStatus(data.job_id);
+                
+            } catch (err) {
+                console.error('Submission error:', err);
+                showError(err.message);
+                btn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+        
+        function pollJobStatus(jobId) {
+            const btn = document.querySelector('.btn');
+            const loading = document.getElementById('loading');
+            
+            if (pollingInterval) clearInterval(pollingInterval);
+            
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/status/${jobId}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'completed') {
+                        clearInterval(pollingInterval);
+                        loading.classList.remove('active');
+                        btn.disabled = false;
+                        
+                        const resultsResponse = await fetch(`/results/${jobId}`);
+                        const results = await resultsResponse.json();
+                        
+                        displayResults(results);
+                        showNotification('Transcription Complete!', 'Your video is ready.');
+                        
+                    } else if (data.status === 'failed') {
+                        clearInterval(pollingInterval);
+                        loading.classList.remove('active');
+                        btn.disabled = false;
+                        showError('Transcription failed. Please try again.');
+                    } else {
+                        loading.querySelector('p').textContent = `Processing... (${data.status})`;
+                    }
+                } catch (err) {
+                    console.error('Polling error:', err);
+                }
+            }, 3000);
+        }
+        
+        async function transcribeSync() {
+            const urlInput = document.getElementById('url');
+            const url = urlInput.value.trim();
+            const lang = document.getElementById('lang').value;
+            
+            if (!url) {
+                showError('Please enter a video URL');
+                return;
+            }
+            
+            const btn = document.querySelector('.btn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+            
+            btn.disabled = true;
+            loading.classList.add('active');
+            loading.querySelector('p').textContent = 'Processing audio...';
+            results.classList.remove('active');
+            error.classList.remove('active');
+            
+            try {
                 console.log('Starting transcription:', { url, lang });
                 
                 const controller = new AbortController();
@@ -505,19 +677,14 @@
                 
                 const response = await fetch('/transcribe', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url, lang: lang }),
                     signal: controller.signal
                 });
                 
                 clearTimeout(timeoutId);
                 
-                console.log('Response status:', response.status);
-                
                 const data = await response.json();
-                console.log('Response data:', data);
                 
                 if (!response.ok) {
                     const errorMsg = data.detail?.message || data.detail || 'Transcription failed';
@@ -543,7 +710,11 @@
             }
         }
         
+        let currentData = null;
+        
         function displayResults(data) {
+            currentData = data;
+            
             document.getElementById('duration').textContent = formatTime(data.duration);
             const langDisplay = data.detected_mt && data.detected_mt !== 'en' 
                 ? `${data.language.toUpperCase()} (${data.detected_mt.toUpperCase()}${data.mt_enhanced ? ' ✓' : ''})`
@@ -553,7 +724,7 @@
             document.getElementById('transcript').textContent = data.full_text;
             
             if (data.processing_time) {
-                console.log(`✅ Transcribed in ${data.processing_time}s [${data.request_id}]`);
+                console.log(`✅ Transcribed in ${data.processing_time}s [${data.request_id || data.job_id}]`);
             }
             
             const segmentsContainer = document.getElementById('segments');
@@ -577,6 +748,21 @@
             document.getElementById('results').classList.add('active');
         }
         
+        function copyTranscript() {
+            if (!currentData) return;
+            navigator.clipboard.writeText(currentData.full_text).then(() => {
+                alert('✓ Transcript copied to clipboard!');
+            });
+        }
+        
+        function copySegments() {
+            if (!currentData) return;
+            const json = JSON.stringify(currentData.segments, null, 2);
+            navigator.clipboard.writeText(json).then(() => {
+                alert('✓ JSON segments copied to clipboard!');
+            });
+        }
+        
         function formatTime(seconds) {
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
@@ -591,7 +777,7 @@
         
         document.getElementById('url').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                transcribe();
+                handleSubmit();
             }
         });
     </script>
