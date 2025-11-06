@@ -503,16 +503,124 @@
         }
         
         @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
             .header h1 {
-                font-size: 3em;
+                font-size: 2.5em;
             }
             
             .header h1::before {
-                left: -20px;
+                left: -15px;
+                font-size: 1em;
+            }
+            
+            .header p {
+                font-size: 0.75em;
+                margin-top: 10px;
+            }
+            
+            .header > div {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            .theme-toggle {
+                padding: 10px 15px;
+                font-size: 0.7em;
+                white-space: nowrap;
+            }
+            
+            .nav-history {
+                padding: 10px 15px;
+                font-size: 0.7em;
+                white-space: nowrap;
+            }
+            
+            .card {
+                padding: 25px 20px;
+            }
+            
+            .card::before {
+                font-size: 0.65em;
+                top: -10px;
             }
             
             .metadata {
                 grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .section-header > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            .copy-btn {
+                padding: 8px 12px;
+                font-size: 0.65em;
+                margin-left: 0;
+                white-space: nowrap;
+                flex: 1 1 auto;
+                min-width: fit-content;
+            }
+            
+            .segment {
+                padding: 15px;
+            }
+            
+            .segment-time {
+                font-size: 0.65em;
+            }
+            
+            .segment-text {
+                font-size: 0.9em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header h1::before,
+            .header h1::after {
+                display: none;
+            }
+            
+            .header p {
+                font-size: 0.7em;
+            }
+            
+            .card {
+                padding: 20px 15px;
+            }
+            
+            .input-group label {
+                font-size: 0.75em;
+            }
+            
+            .copy-btn {
+                font-size: 0.6em;
+                padding: 6px 10px;
+            }
+            
+            .section-header h3 {
+                font-size: 1em;
             }
         }
     </style>

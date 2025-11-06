@@ -238,6 +238,97 @@
             margin-bottom: 20px;
             text-transform: uppercase;
         }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .header h1::before {
+                left: -15px;
+                font-size: 1em;
+            }
+            
+            .header > div {
+                display: flex;
+                gap: 10px;
+                width: 100%;
+            }
+            
+            .theme-toggle {
+                padding: 10px 15px;
+                font-size: 0.7em;
+                white-space: nowrap;
+            }
+            
+            .nav-back {
+                padding: 10px 15px;
+                font-size: 0.7em;
+                white-space: nowrap;
+            }
+            
+            .job-card {
+                padding: 25px 20px;
+            }
+            
+            .job-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .job-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px 18px;
+                font-size: 0.75em;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .header h1::before,
+            .header h1::after {
+                display: none;
+            }
+            
+            .job-card {
+                padding: 20px 15px;
+            }
+            
+            .job-card h2 {
+                font-size: 1.2em;
+            }
+            
+            .btn {
+                font-size: 0.7em;
+                padding: 10px 15px;
+            }
+            
+            .empty-state {
+                padding: 40px 20px;
+            }
+            
+            .empty-state h2 {
+                font-size: 1.5em;
+            }
+        }
     </style>
 </head>
 <body>
