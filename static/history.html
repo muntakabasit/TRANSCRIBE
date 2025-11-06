@@ -318,7 +318,7 @@
                             </div>
                             <div class="job-actions">
                                 ${job.status === 'completed' 
-                                    ? `<a href="/results/${job.job_id}" target="_blank" class="btn">View Results</a>
+                                    ? `<a href="/results.html?job=${job.job_id}" target="_blank" class="btn">View Results</a>
                                        <button onclick="copyJobId('${job.job_id}')" class="btn btn-secondary">Copy ID</button>`
                                     : `<button onclick="checkStatus('${job.job_id}')" class="btn btn-secondary">Check Status</button>`
                                 }

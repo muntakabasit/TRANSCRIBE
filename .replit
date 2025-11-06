@@ -35,6 +35,10 @@ externalPort = 80
 localPort = 37531
 externalPort = 3000
 
+[[ports]]
+localPort = 40313
+externalPort = 3001
+
 [nix]
 channel = "stable-25_05"
 packages = ["ffmpeg", "ffmpeg-full", "libxcrypt", "pkg-config"]

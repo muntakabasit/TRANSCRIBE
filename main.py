@@ -556,6 +556,14 @@ async def export_training_data(db: Session = Depends(get_db)):
 def root():
     return FileResponse("static/index.html")
 
+@app.get("/results.html")
+def results_page():
+    return FileResponse("static/results.html")
+
+@app.get("/history.html")
+def history_page():
+    return FileResponse("static/history.html")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)

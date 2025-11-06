@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"TRANSCRIPT RESULTS"</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #fff;
+            --text-primary: #000;
+            --text-secondary: #666;
+            --border-color: #000;
+            --stripe-color: #000;
+            --card-bg: #fff;
+            --button-bg: #000;
+            --button-text: #fff;
+            --button-hover: #333;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --text-primary: #fff;
+            --text-secondary: #999;
+            --border-color: #fff;
+            --stripe-color: #fff;
+            --card-bg: #252525;
+            --button-bg: #fff;
+            --button-text: #000;
+            --button-hover: #ddd;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 0;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--stripe-color);
+            z-index: 1000;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 3px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.02em;
+        }
+        
+        .header h1::before {
+            content: '"';
+            margin-right: 10px;
+        }
+        
+        .header h1::after {
+            content: '"';
+            margin-left: 10px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: var(--button-bg);
+            color: var(--button-text);
+            border: 2px solid var(--border-color);
+            padding: 12px 24px;
+            font-weight: 700;
+            font-size: 0.85em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: var(--button-hover);
+        }
+        
+        .meta-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .meta-item {
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+        }
+        
+        .meta-item::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -12px;
+            left: 15px;
+            background: var(--bg-primary);
+            padding: 0 8px;
+            font-size: 0.7em;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        
+        .meta-value {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+        
+        .transcript-box {
+            border: 3px solid var(--border-color);
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .transcript-box::before {
+            content: 'FULL TRANSCRIPT';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-primary);
+            padding: 0 10px;
+            font-size: 0.75em;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+        
+        .transcript-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .segments-box {
+            border: 3px solid var(--border-color);
+            padding: 30px;
+            position: relative;
+        }
+        
+        .segments-box::before {
+            content: 'TIMESTAMPED SEGMENTS';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg-primary);
+            padding: 0 10px;
+            font-size: 0.75em;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+        }
+        
+        .segment {
+            border-left: 4px solid var(--border-color);
+            padding-left: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .segment .time {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .segment .text {
+            font-size: 1.05em;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .loading h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            border: 3px solid #f00;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .error h2 {
+            color: #f00;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Results</h1>
+            <div class="button-group">
+                <button class="btn" onclick="toggleTheme()">● DARK</button>
+                <a href="/history.html" class="btn">← History</a>
+                <a href="/" class="btn">← Home</a>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading">
+            <h2>LOADING TRANSCRIPT...</h2>
+        </div>
+        
+        <div id="content" style="display: none;">
+            <div class="meta-box">
+                <div class="meta-item" data-label="DURATION">
+                    <div class="meta-value" id="duration">--</div>
+                </div>
+                <div class="meta-item" data-label="LANGUAGE">
+                    <div class="meta-value" id="language">--</div>
+                </div>
+                <div class="meta-item" data-label="SEGMENTS">
+                    <div class="meta-value" id="segments">--</div>
+                </div>
+            </div>
+            
+            <div class="transcript-box">
+                <div class="transcript-text" id="transcript"></div>
+            </div>
+            
+            <div class="button-group" style="margin-bottom: 30px;">
+                <button class="btn" onclick="copyTranscript()">Copy Text</button>
+                <button class="btn" onclick="downloadMarkdown()">Download MD</button>
+                <button class="btn" onclick="downloadJSON()">Download JSON</button>
+                <button class="btn" onclick="copyForAI()">Copy for AI</button>
+            </div>
+            
+            <div class="segments-box">
+                <div id="segmentsContainer"></div>
+            </div>
+        </div>
+        
+        <div id="error" style="display: none;" class="error">
+            <h2>ERROR</h2>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+    
+    <script>
+        let currentData = null;
+        
+        // Theme management
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.body.setAttribute('data-theme', newTheme === 'dark' ? 'dark' : '');
+            localStorage.setItem('theme', newTheme);
+            
+            const btn = document.querySelector('.button-group .btn');
+            btn.textContent = newTheme === 'dark' ? '○ LIGHT' : '● DARK';
+        }
+        
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+        }
+        
+        // Get job ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('job');
+        
+        if (!jobId) {
+            showError('No job ID provided in URL');
+        } else {
+            loadResults(jobId);
+        }
+        
+        async function loadResults(jobId) {
+            try {
+                const response = await fetch(`/results/${jobId}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load results');
+                }
+                
+                currentData = data;
+                displayResults(data);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (err) {
+                console.error('Load error:', err);
+                showError(err.message);
+            }
+        }
+        
+        function displayResults(data) {
+            document.getElementById('duration').textContent = formatTime(data.duration);
+            document.getElementById('language').textContent = data.language.toUpperCase();
+            document.getElementById('segments').textContent = data.segment_count || data.segments.length;
+            document.getElementById('transcript').textContent = data.full_text;
+            
+            const container = document.getElementById('segmentsContainer');
+            container.innerHTML = data.segments.map(seg => `
+                <div class="segment">
+                    <div class="time">${formatTime(seg.start)} - ${formatTime(seg.end)}</div>
+                    <div class="text">${seg.text}</div>
+                </div>
+            `).join('');
+        }
+        
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function copyTranscript() {
+            if (!currentData) return;
+            navigator.clipboard.writeText(currentData.full_text);
+            alert('✓ Transcript copied!');
+        }
+        
+        function downloadMarkdown() {
+            if (!currentData) return;
+            const md = `# Transcription Results\n\n**URL:** ${currentData.url}\n**Language:** ${currentData.language}\n**Duration:** ${formatTime(currentData.duration)}\n\n## Full Transcript\n\n${currentData.full_text}\n\n## Segments\n\n${currentData.segments.map(s => `**[${formatTime(s.start)} - ${formatTime(s.end)}]**\n${s.text}\n`).join('\n')}`;
+            downloadFile(md, 'transcript.md', 'text/markdown');
+        }
+        
+        function downloadJSON() {
+            if (!currentData) return;
+            const json = JSON.stringify(currentData.segments, null, 2);
+            downloadFile(json, 'segments.json', 'application/json');
+        }
+        
+        function copyForAI() {
+            if (!currentData) return;
+            const aiText = `# Transcription Analysis Request\n\n**Source:** ${currentData.url}\n**Language:** ${currentData.language}\n**Duration:** ${formatTime(currentData.duration)}\n\n## Full Transcript\n\n${currentData.full_text}\n\n## Timestamped Segments\n\n${currentData.segments.map(s => `[${formatTime(s.start)}-${formatTime(s.end)}] ${s.text}`).join('\n')}`;
+            navigator.clipboard.writeText(aiText);
+            alert('✓ AI-friendly format copied!');
+        }
+        
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
