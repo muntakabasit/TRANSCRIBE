@@ -15,6 +15,10 @@ author = "agent"
 task = "workflow.run"
 args = "dawt-transcribe-server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "design-scraper"
+
 [[workflows.workflow]]
 name = "dawt-transcribe-server"
 author = "agent"
@@ -27,13 +31,21 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow]]
+name = "design-scraper"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd design-scraper && uvicorn app:app --host 0.0.0.0 --port 6000"
+waitForPort = 6000
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 33221
-externalPort = 3002
 
 [[ports]]
 localPort = 37531
@@ -43,9 +55,13 @@ externalPort = 3000
 localPort = 40313
 externalPort = 3001
 
+[[ports]]
+localPort = 6000
+externalPort = 6000
+
 [nix]
 channel = "stable-25_05"
-packages = ["ffmpeg", "ffmpeg-full", "libxcrypt", "pkg-config"]
+packages = ["ffmpeg", "ffmpeg-full", "freetype", "gitFull", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "pkg-config", "playwright-driver", "tcl", "tk", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
