@@ -347,6 +347,14 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                 info = ydl.extract_info(url, download=True)
                 audio_path = ydl.prepare_filename(info)
             
+            # Check video duration (limit to 15 minutes to prevent crashes)
+            video_duration = info.get('duration', 0)
+            max_duration = 900  # 15 minutes
+            if video_duration > max_duration:
+                raise ValueError(f"⚠️ Video too long ({video_duration//60} minutes). Maximum: {max_duration//60} minutes. Please use shorter videos to prevent server crashes.")
+            
+            logger.info(f"[{job_id}] Video duration: {video_duration}s")
+            
             # Transcribe
             logger.info(f"[{job_id}] Starting Whisper transcription...")
             whisper_lang = whisper_lang_map.get(lang, "en")
