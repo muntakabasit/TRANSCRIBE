@@ -1,4 +1,4 @@
-# DAWT-Transcribe v2.2
+# DAWT-Transcribe v2.3
 
 ## Overview
 DAWT-Transcribe v2.2 is a sovereign audio transcription API with multilingual enhancement built for processing Ghanaian Pidgin, breath-song clips, Instagram Reels, TikTok videos, and vocal samples into timestamped JSON outputs. Uses OpenAI's Whisper model + mT5 machine translation running locally (no cloud dependencies) to maintain data sovereignty. Features async job processing with browser notifications, persistent transcript history, AI-friendly export formats (Markdown, JSON, ChatGPT-ready), and transcription editing for building fine-tuning datasets. Virgil Abloh/Off-White inspired UI with bold typography, quotation marks, and minimalist black-and-white industrial design. Designed to feed AutoCut's beat analysis and video editing workflows.
@@ -32,6 +32,16 @@ DAWT-Transcribe v2.2 is a sovereign audio transcription API with multilingual en
 - Graceful fallback when MT models unavailable
 
 ## Recent Changes
+- **2025-11-06 v2.3.0:** CRITICAL FIX - Language detection & transcription accuracy
+  - **FIXED:** Whisper now forced to use selected language (was auto-detecting wrong language)
+  - **FIXED:** Twi videos now transcribe correctly (was detecting as Arabic and producing garbage)
+  - **Language Mapping:** Added Whisper ISO code mapping (Twi→ak, Igbo→ig, Yoruba→yo, etc.)
+  - **Better Translation:** Improved MT prompts from "clarify pidgin/dialect" to "translate [Language] to English"
+  - **User Impact:** Selecting a language now FORCES Whisper to transcribe in that language
+  - **Previous Bug:** System was ignoring user language selection and auto-detecting (often wrong)
+  - **yt-dlp Updated:** Upgraded to 2025.10.22 for better TikTok compatibility
+  - **Note:** Some TikTok videos require login (age-restricted) and cannot be downloaded
+
 - **2025-11-06 v2.2.0:** Transcription editing + training dataset builder
   - **Edit Mode:** Click "✏ Edit" to enable contenteditable fields for transcript and segments
   - **Save Corrections:** "💾 Save" button stores edits to database with timestamp

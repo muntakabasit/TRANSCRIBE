@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-VERSION = "2.1.0"
+VERSION = "2.3.0"
 app = FastAPI(
     title="DAWT-Transcribe",
     version=VERSION,
@@ -82,6 +82,21 @@ lang_keywords = {
     "portuguese": ["obrigado", "sinta", "olá", "como"],
     "ewe": ["mede akpe", "yɔ", "afɔ", "wò"],
     "dagbani": ["a yili", "zahir", "naa", "ti"]
+}
+
+whisper_lang_map = {
+    "en": "en",
+    "pidgin": "en",
+    "twi": "ak",
+    "igbo": "ig", 
+    "yoruba": "yo",
+    "hausa": "ha",
+    "swahili": "sw",
+    "amharic": "am",
+    "french": "fr",
+    "portuguese": "pt",
+    "ewe": "ee",
+    "dagbani": "en"
 }
 
 class TranscribeRequest(BaseModel):
@@ -191,7 +206,11 @@ async def transcribe(request: TranscribeRequest):
         
         logger.info(f"[{request_id}] Starting Whisper transcription...")
         whisper_start = time.time()
-        result = model.transcribe(audio_path)
+        
+        whisper_lang = whisper_lang_map.get(request.lang, "en")
+        logger.info(f"[{request_id}] Forcing Whisper language: {whisper_lang} (user selected: {request.lang})")
+        result = model.transcribe(audio_path, language=whisper_lang)
+        
         whisper_time = time.time() - whisper_start
         logger.info(f"[{request_id}] Whisper completed in {whisper_time:.2f}s")
         
@@ -210,13 +229,27 @@ async def transcribe(request: TranscribeRequest):
         
         if detected_lang != "en" and lang_models and detected_lang in lang_models:
             try:
-                logger.info(f"[{request_id}] Enhancing transcription with {detected_lang} MT...")
+                logger.info(f"[{request_id}] Translating {detected_lang} to English...")
                 mt_start = time.time()
                 lm = lang_models[detected_lang]
                 texts = [seg["text"] for seg in segments]
                 
+                lang_full_name = {
+                    "pidgin": "Pidgin English",
+                    "twi": "Twi",
+                    "igbo": "Igbo",
+                    "yoruba": "Yoruba",
+                    "hausa": "Hausa",
+                    "swahili": "Swahili",
+                    "amharic": "Amharic",
+                    "french": "French",
+                    "portuguese": "Portuguese",
+                    "ewe": "Ewe",
+                    "dagbani": "Dagbani"
+                }.get(detected_lang, detected_lang.title())
+                
                 inputs = lm["tokenizer"](
-                    [f"Translate to English and clarify {detected_lang} pidgin/dialect: {t}" for t in texts],
+                    [f"translate {lang_full_name} to English: {t}" for t in texts],
                     return_tensors="pt",
                     padding=True,
                     truncation=True,
@@ -234,12 +267,12 @@ async def transcribe(request: TranscribeRequest):
                 trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
                 
                 for i, seg in enumerate(segments):
-                    if trans_texts[i].strip() and trans_texts[i] != seg["text"]:
+                    if trans_texts[i].strip() and len(trans_texts[i]) > 3:
                         seg["text_enhanced"] = trans_texts[i]
                         mt_enhanced = True
                 
                 mt_time = time.time() - mt_start
-                logger.info(f"[{request_id}] Translation enhancement complete in {mt_time:.2f}s")
+                logger.info(f"[{request_id}] Translation complete in {mt_time:.2f}s")
             except Exception as e:
                 logger.warning(f"[{request_id}] Translation failed: {e}. Returning Whisper output only.")
         
@@ -316,7 +349,9 @@ def process_transcription_background(job_id: str, url: str, lang: str):
             
             # Transcribe
             logger.info(f"[{job_id}] Starting Whisper transcription...")
-            result = model.transcribe(audio_path)
+            whisper_lang = whisper_lang_map.get(lang, "en")
+            logger.info(f"[{job_id}] Forcing Whisper language: {whisper_lang} (user selected: {lang})")
+            result = model.transcribe(audio_path, language=whisper_lang)
             
             segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
             full_text = result["text"]
@@ -337,8 +372,22 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                     lm = lang_models[detected_lang]
                     texts = [seg["text"] for seg in segments]
                     
+                    lang_full_name = {
+                        "pidgin": "Pidgin English",
+                        "twi": "Twi",
+                        "igbo": "Igbo",
+                        "yoruba": "Yoruba",
+                        "hausa": "Hausa",
+                        "swahili": "Swahili",
+                        "amharic": "Amharic",
+                        "french": "French",
+                        "portuguese": "Portuguese",
+                        "ewe": "Ewe",
+                        "dagbani": "Dagbani"
+                    }.get(detected_lang, detected_lang.title())
+                    
                     inputs = lm["tokenizer"](
-                        [f"Translate to English and clarify {detected_lang} pidgin/dialect: {t}" for t in texts],
+                        [f"translate {lang_full_name} to English: {t}" for t in texts],
                         return_tensors="pt",
                         padding=True,
                         truncation=True,
@@ -356,7 +405,7 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                     trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
                     
                     for i, seg in enumerate(segments):
-                        if trans_texts[i].strip() and trans_texts[i] != seg["text"]:
+                        if trans_texts[i].strip() and len(trans_texts[i]) > 3:
                             seg["text_enhanced"] = trans_texts[i]
                             mt_enhanced = True
                 except Exception as e:
