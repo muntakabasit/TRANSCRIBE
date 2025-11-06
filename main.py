@@ -435,7 +435,18 @@ def process_transcription_background(job_id: str, url: str, lang: str):
         except Exception as e:
             logger.error(f"[{job_id}] ❌ Background transcription failed: {str(e)}")
             job.status = "failed"
-            job.error_message = str(e)
+            
+            # Make error messages user-friendly
+            error_str = str(e)
+            if "not be comfortable for some audiences" in error_str or "Log in for access" in error_str:
+                job.error_message = "⚠️ TikTok Age Restriction: This video requires login to download (age-restricted or sensitive content). Please try a different public TikTok video."
+            elif "Private video" in error_str or "This video is private" in error_str:
+                job.error_message = "⚠️ Private Video: This video is not publicly accessible. Please use a public video URL."
+            elif "No video formats found" in error_str:
+                job.error_message = "⚠️ Download Failed: TikTok blocked this video. Try a different public TikTok, Instagram Reel, or YouTube URL."
+            else:
+                job.error_message = f"Error: {error_str}"
+            
             db.commit()
     finally:
         db.close()
