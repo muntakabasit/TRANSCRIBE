@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>"MY TRANSCRIPTS"</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: #fff;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #000;
+            z-index: 1000;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px;
+        }
+        
+        .header {
+            margin-bottom: 60px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 4em;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            color: #000;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .header h1::before {
+            content: '"';
+            position: absolute;
+            left: -40px;
+            top: -10px;
+            font-size: 1.2em;
+            color: #000;
+        }
+        
+        .header h1::after {
+            content: '"';
+            margin-left: 10px;
+            font-size: 1.2em;
+        }
+        
+        .nav-back {
+            background: #000;
+            color: #fff;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        
+        .nav-back:hover {
+            background: #333;
+        }
+        
+        .job-card {
+            background: #fff;
+            border: 3px solid #000;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .job-card::before {
+            content: attr(data-status);
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #fff;
+            padding: 0 10px;
+            font-size: 0.75em;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .job-id {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .job-url {
+            font-size: 0.9em;
+            color: #000;
+            font-weight: 700;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+        
+        .job-meta {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .job-meta span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .job-meta span::before {
+            content: '→ ';
+            margin-right: 5px;
+            color: #000;
+        }
+        
+        .job-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            font-weight: 700;
+            font-size: 0.85em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #333;
+        }
+        
+        .btn-secondary {
+            background: #fff;
+            color: #000;
+            border: 2px solid #000;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0f0f0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #666;
+        }
+        
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>My Transcripts</h1>
+            <a href="/" class="nav-back">← Back</a>
+        </div>
+        
+        <div id="jobs-container"></div>
+    </div>
+    
+    <script>
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                
+                const container = document.getElementById('jobs-container');
+                
+                if (data.jobs.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <h2>No Transcripts Yet</h2>
+                            <p>Submit your first video to get started!</p>
+                            <br>
+                            <a href="/" class="btn">Start Transcribing</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.jobs.map(job => {
+                    const statusColors = {
+                        completed: '✓ COMPLETED',
+                        processing: '⟳ PROCESSING',
+                        pending: '○ PENDING',
+                        failed: '✗ FAILED'
+                    };
+                    
+                    return `
+                        <div class="job-card" data-status="${statusColors[job.status] || job.status}">
+                            <div class="job-id">${job.job_id}</div>
+                            <div class="job-url">${job.url}</div>
+                            <div class="job-meta">
+                                ${job.language ? `<span>Language: ${job.language.toUpperCase()}</span>` : ''}
+                                ${job.duration ? `<span>Duration: ${formatTime(job.duration)}</span>` : ''}
+                                ${job.segment_count ? `<span>Segments: ${job.segment_count}</span>` : ''}
+                                <span>Created: ${new Date(job.created_at).toLocaleString()}</span>
+                            </div>
+                            <div class="job-actions">
+                                ${job.status === 'completed' 
+                                    ? `<a href="/results/${job.job_id}" target="_blank" class="btn">View Results</a>
+                                       <button onclick="copyJobId('${job.job_id}')" class="btn btn-secondary">Copy ID</button>`
+                                    : `<button onclick="checkStatus('${job.job_id}')" class="btn btn-secondary">Check Status</button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (err) {
+                console.error('Failed to load history:', err);
+                document.getElementById('jobs-container').innerHTML = `
+                    <div class="empty-state">
+                        <h2>Error Loading History</h2>
+                        <p>${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        function copyJobId(jobId) {
+            navigator.clipboard.writeText(jobId);
+            alert('Job ID copied to clipboard!');
+        }
+        
+        async function checkStatus(jobId) {
+            try {
+                const response = await fetch(`/status/${jobId}`);
+                const data = await response.json();
+                alert(`Status: ${data.status.toUpperCase()}\n\n${data.status === 'completed' ? 'Transcription ready!' : 'Still processing...'}`);
+                if (data.status === 'completed') {
+                    loadHistory();
+                }
+            } catch (err) {
+                alert('Failed to check status: ' + err.message);
+            }
+        }
+        
+        // Load history on page load
+        loadHistory();
+        
+        // Auto-refresh every 15 seconds
+        setInterval(loadHistory, 15000);
+    </script>
+</body>
+</html>

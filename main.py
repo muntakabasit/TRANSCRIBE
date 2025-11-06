@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -8,11 +8,14 @@ import tempfile
 import os
 import logging
 from pydantic import BaseModel, validator
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from transformers import MT5ForConditionalGeneration, MT5Tokenizer, MarianMTModel, MarianTokenizer
 import torch
 import time
 from datetime import datetime
+import json
+from sqlalchemy.orm import Session
+from database import get_db, TranscriptionJob
 
 logging.basicConfig(
     level=logging.INFO,
@@ -283,6 +286,215 @@ async def transcribe(request: TranscribeRequest):
                 logger.debug(f"[{request_id}] Cleanup: removed temp file")
             except Exception as cleanup_err:
                 logger.debug(f"[{request_id}] Cleanup warning: {cleanup_err}")
+
+def process_transcription_background(job_id: str, url: str, lang: str):
+    """Background task to process transcription"""
+    db = SessionLocal()
+    try:
+        job = db.query(TranscriptionJob).filter(TranscriptionJob.id == job_id).first()
+        if not job:
+            return
+        
+        job.status = "processing"
+        db.commit()
+        
+        start_time = time.time()
+        audio_path = None
+        
+        try:
+            # Download audio
+            logger.info(f"[{job_id}] Downloading audio from URL...")
+            ydl_opts = {
+                'format': 'bestaudio/best',
+                'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
+                'quiet': True,
+                'no_warnings': True,
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                audio_path = ydl.prepare_filename(info)
+            
+            # Transcribe
+            logger.info(f"[{job_id}] Starting Whisper transcription...")
+            result = model.transcribe(audio_path)
+            
+            segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
+            full_text = result["text"]
+            
+            # Language detection
+            detected_lang = lang
+            mt_enhanced = False
+            
+            if detected_lang == "en" and lang_models:
+                for lang_key, keywords in lang_keywords.items():
+                    if any(kw.lower() in full_text.lower() for kw in keywords):
+                        detected_lang = lang_key
+                        break
+            
+            # MT enhancement (if applicable)
+            if detected_lang != "en" and lang_models and detected_lang in lang_models:
+                try:
+                    lm = lang_models[detected_lang]
+                    texts = [seg["text"] for seg in segments]
+                    
+                    inputs = lm["tokenizer"](
+                        [f"Translate to English and clarify {detected_lang} pidgin/dialect: {t}" for t in texts],
+                        return_tensors="pt",
+                        padding=True,
+                        truncation=True,
+                        max_length=128
+                    )
+                    
+                    with torch.no_grad():
+                        translated = lm["model"].generate(
+                            inputs.input_ids,
+                            max_length=128,
+                            num_beams=4,
+                            early_stopping=True
+                        )
+                    
+                    trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
+                    
+                    for i, seg in enumerate(segments):
+                        if trans_texts[i].strip() and trans_texts[i] != seg["text"]:
+                            seg["text_enhanced"] = trans_texts[i]
+                            mt_enhanced = True
+                except Exception as e:
+                    logger.warning(f"[{job_id}] Translation failed: {e}")
+            
+            # Cleanup
+            if audio_path and os.path.exists(audio_path):
+                os.remove(audio_path)
+            
+            processing_time = time.time() - start_time
+            
+            # Update job with results
+            job.status = "completed"
+            job.full_text = full_text
+            job.segments = json.dumps(segments)
+            job.detected_language = result["language"]
+            job.detected_mt = detected_lang
+            job.mt_enhanced = mt_enhanced
+            job.duration = result["segments"][-1]["end"] if segments else 0
+            job.segment_count = len(segments)
+            job.processing_time = round(processing_time, 2)
+            job.completed_at = datetime.utcnow()
+            db.commit()
+            
+            logger.info(f"[{job_id}] ✅ Background transcription complete in {processing_time:.2f}s")
+            
+        except Exception as e:
+            logger.error(f"[{job_id}] ❌ Background transcription failed: {str(e)}")
+            job.status = "failed"
+            job.error_message = str(e)
+            db.commit()
+    finally:
+        db.close()
+
+@app.post("/submit")
+async def submit_job(request: TranscribeRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    """Submit a transcription job and get job ID immediately"""
+    if not request.url:
+        raise HTTPException(status_code=400, detail="URL is required for background jobs")
+    
+    job_id = f"job_{int(time.time() * 1000)}"
+    
+    # Create job record
+    job = TranscriptionJob(
+        id=job_id,
+        url=request.url,
+        language=request.lang,
+        status="pending"
+    )
+    db.add(job)
+    db.commit()
+    
+    # Start background task
+    background_tasks.add_task(process_transcription_background, job_id, request.url, request.lang)
+    
+    logger.info(f"[{job_id}] Job submitted for background processing")
+    
+    return JSONResponse({
+        "success": True,
+        "job_id": job_id,
+        "message": "Transcription started! Check status or come back later.",
+        "status_url": f"/status/{job_id}",
+        "results_url": f"/results/{job_id}"
+    })
+
+@app.get("/status/{job_id}")
+async def get_status(job_id: str, db: Session = Depends(get_db)):
+    """Check if a job is complete"""
+    job = db.query(TranscriptionJob).filter(TranscriptionJob.id == job_id).first()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return JSONResponse({
+        "job_id": job_id,
+        "status": job.status,
+        "created_at": job.created_at.isoformat(),
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+        "processing_time": job.processing_time
+    })
+
+@app.get("/results/{job_id}")
+async def get_results(job_id: str, db: Session = Depends(get_db)):
+    """Get full transcription results"""
+    job = db.query(TranscriptionJob).filter(TranscriptionJob.id == job_id).first()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.status == "failed":
+        raise HTTPException(status_code=500, detail={"error": "transcription_failed", "message": job.error_message})
+    
+    if job.status != "completed":
+        return JSONResponse({
+            "job_id": job_id,
+            "status": job.status,
+            "message": "Transcription still in progress. Check back soon!"
+        })
+    
+    return JSONResponse({
+        "success": True,
+        "job_id": job_id,
+        "url": job.url,
+        "full_text": job.full_text,
+        "segments": json.loads(job.segments) if job.segments else [],
+        "language": job.detected_language,
+        "detected_mt": job.detected_mt,
+        "mt_enhanced": job.mt_enhanced,
+        "duration": job.duration,
+        "segment_count": job.segment_count,
+        "processing_time": job.processing_time,
+        "created_at": job.created_at.isoformat(),
+        "completed_at": job.completed_at.isoformat()
+    })
+
+@app.get("/history")
+async def get_history(limit: int = 20, db: Session = Depends(get_db)):
+    """Get recent transcription history"""
+    jobs = db.query(TranscriptionJob).order_by(TranscriptionJob.created_at.desc()).limit(limit).all()
+    
+    return JSONResponse({
+        "jobs": [
+            {
+                "job_id": job.id,
+                "url": job.url,
+                "status": job.status,
+                "language": job.detected_mt or job.language,
+                "duration": job.duration,
+                "segment_count": job.segment_count,
+                "created_at": job.created_at.isoformat(),
+                "completed_at": job.completed_at.isoformat() if job.completed_at else None
+            }
+            for job in jobs
+        ]
+    })
+
+from sqlalchemy.orm import sessionmaker
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=__import__('database').engine)
 
 @app.get("/")
 def root():
