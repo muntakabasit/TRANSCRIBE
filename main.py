@@ -24,11 +24,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 VERSION = "2.3.0"
+COMPATIBLE_SINCE = "2.0.0"
+FORMAT_VERSION = "dawt-transcript-v1"
+
 app = FastAPI(
     title="DAWT-Transcribe",
     version=VERSION,
     description="Sovereign audio transcription with multilingual enhancement"
 )
+
+def add_metadata(data: dict) -> dict:
+    """Add version metadata to JSON responses (Excel DNA principle: backward compatibility)"""
+    return {
+        "meta": {
+            "version": VERSION,
+            "format": FORMAT_VERSION,
+            "compatible_since": COMPATIBLE_SINCE,
+            "generated": datetime.utcnow().isoformat() + "Z"
+        },
+        **data
+    }
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -482,13 +497,13 @@ async def submit_job(request: TranscribeRequest, background_tasks: BackgroundTas
     
     logger.info(f"[{job_id}] Job submitted for background processing")
     
-    return JSONResponse({
+    return JSONResponse(add_metadata({
         "success": True,
         "job_id": job_id,
         "message": "Transcription started! Check status or come back later.",
         "status_url": f"/status/{job_id}",
         "results_url": f"/results/{job_id}"
-    })
+    }))
 
 @app.get("/status/{job_id}")
 async def get_status(job_id: str, db: Session = Depends(get_db)):
@@ -498,13 +513,13 @@ async def get_status(job_id: str, db: Session = Depends(get_db)):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    return JSONResponse({
+    return JSONResponse(add_metadata({
         "job_id": job_id,
         "status": job.status,
         "created_at": job.created_at.isoformat(),
         "completed_at": job.completed_at.isoformat() if job.completed_at else None,
         "processing_time": job.processing_time
-    })
+    }))
 
 @app.get("/results/{job_id}")
 async def get_results(job_id: str, db: Session = Depends(get_db)):
@@ -524,7 +539,7 @@ async def get_results(job_id: str, db: Session = Depends(get_db)):
             "message": "Transcription still in progress. Check back soon!"
         })
     
-    return JSONResponse({
+    return JSONResponse(add_metadata({
         "success": True,
         "job_id": job_id,
         "url": job.url,
@@ -541,7 +556,7 @@ async def get_results(job_id: str, db: Session = Depends(get_db)):
         "corrected_text": job.corrected_text,
         "corrected_segments": json.loads(job.corrected_segments) if job.corrected_segments else None,
         "corrected_at": job.corrected_at.isoformat() if job.corrected_at else None
-    })
+    }))
 
 @app.get("/history")
 async def get_history(limit: int = 20, db: Session = Depends(get_db)):

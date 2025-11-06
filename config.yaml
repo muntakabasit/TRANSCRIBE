@@ -1,0 +1,101 @@
+# DAWT-Transcribe Configuration
+# User-editable settings for runtime customization
+# This file embodies the "Excel DNA" principle: transparent, formula-friendly configuration
+
+meta:
+  version: 2.3.0
+  format: dawt-config-v1
+  compatible_since: 2.0.0
+
+whisper:
+  # Whisper model size: tiny (fastest) | base | small | medium | large
+  model: tiny
+  
+  # Default language: auto (auto-detect) | en | twi | igbo | yoruba | hausa | etc.
+  language: auto
+  
+  # Force language selection (recommended for known-language content)
+  force_language: true
+
+translation:
+  # Enable multilingual translation enhancement
+  enabled: true
+  
+  # Languages to support for MT enhancement
+  # Available: pidgin, twi, igbo, yoruba, hausa, swahili, amharic, french, portuguese, ewe, dagbani
+  languages:
+    - pidgin
+    - twi
+    - igbo
+    - yoruba
+    - hausa
+    - swahili
+    - amharic
+    - french
+    - portuguese
+    - ewe
+    - dagbani
+
+processing:
+  # Maximum video duration in minutes (prevents server crashes)
+  max_duration_minutes: 15
+  
+  # Default async mode (submit & go)
+  async_default: true
+  
+  # Browser notification support
+  notifications_enabled: true
+
+export:
+  # Include version metadata in all JSON exports
+  include_metadata: true
+  
+  # Export formats to support
+  formats:
+    - json
+    - markdown
+    - csv
+    - srt  # Future: subtitle format
+
+database:
+  # PostgreSQL connection (uses DATABASE_URL env var)
+  # Persistent storage for transcript history
+  persistent: true
+  
+  # Cleanup old jobs (days)
+  cleanup_after_days: 90
+
+sovereignty:
+  # Core principle: All processing stays local
+  local_first: true
+  
+  # No cloud API dependencies
+  cloud_apis_disabled: true
+  
+  # User owns 100% of data
+  full_data_export: true
+
+# Language detection keywords (user-editable)
+# Add your own keywords to improve detection accuracy
+keywords:
+  pidgin:
+    - abeg
+    - wetin
+    - dey
+    - no be
+  twi:
+    - yɛ
+    - ɛ
+    - me
+    - wo
+  igbo:
+    - ndi
+    - na
+    - a
+    - m
+  yoruba:
+    - ni
+    - ti
+    - je
+    - ko
+  # Add more languages as needed...
