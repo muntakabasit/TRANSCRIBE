@@ -44,14 +44,51 @@ class DesignScraper:
         """Main scraping orchestrator - extracts EVERYTHING"""
         print(f"🎨 Starting maximum extraction for: {self.url}")
         
+        # Track all network resources
+        self.captured_resources = {
+            'css': [],
+            'fonts': [],
+            'images': [],
+            'js': []
+        }
+        
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(viewport={'width': 1920, 'height': 1080})
             page = await context.new_page()
             
+            # Intercept network requests to capture ALL resources
+            async def handle_response(response):
+                try:
+                    content_type = response.headers.get('content-type', '')
+                    url = response.url
+                    
+                    if 'text/css' in content_type or url.endswith('.css'):
+                        content = await response.body()
+                        self.captured_resources['css'].append({
+                            'url': url,
+                            'content': content.decode('utf-8', errors='ignore')
+                        })
+                    elif 'font' in content_type or any(url.endswith(ext) for ext in ['.woff', '.woff2', '.ttf', '.otf']):
+                        content = await response.body()
+                        self.captured_resources['fonts'].append({
+                            'url': url,
+                            'content': content
+                        })
+                    elif 'image' in content_type:
+                        content = await response.body()
+                        self.captured_resources['images'].append({
+                            'url': url,
+                            'content': content
+                        })
+                except Exception as e:
+                    print(f"Failed to capture resource {response.url}: {e}")
+            
+            page.on('response', handle_response)
+            
             try:
                 await page.goto(self.url, wait_until='networkidle', timeout=30000)
-                await asyncio.sleep(2)  # Let animations/lazy-load finish
+                await asyncio.sleep(3)  # Let animations/lazy-load finish
                 
                 # Extract everything in parallel
                 results = await asyncio.gather(

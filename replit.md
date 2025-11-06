@@ -9,7 +9,7 @@ DAWT-Transcribe v2.3 is a sovereign audio transcription API designed for process
 - **Design:** Virgil Abloh/Off-White aesthetic - quotation marks, bold typography, black/white minimalism, industrial styling
 - **Integration focus:** Outputs designed for AutoCut beat analysis
 - **Workflow:** Prototype on Replit → Export to Mac Mini → iPhone Shortcuts integration
-- **Future project queued:** UI/UX design scraper tool (after DAWT-Transcribe complete)
+- **New project launched:** Design Scraper - UI/UX extraction tool (running on port 6000)
 
 ## System Architecture
 
