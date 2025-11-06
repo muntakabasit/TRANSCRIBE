@@ -14,13 +14,39 @@
             box-sizing: border-box;
         }
         
+        :root {
+            --bg-primary: #fff;
+            --text-primary: #000;
+            --text-secondary: #666;
+            --border-color: #000;
+            --stripe-color: #000;
+            --card-bg: #fff;
+            --button-bg: #000;
+            --button-text: #fff;
+            --button-hover: #333;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --text-primary: #fff;
+            --text-secondary: #999;
+            --border-color: #fff;
+            --stripe-color: #fff;
+            --card-bg: #252525;
+            --button-bg: #fff;
+            --button-text: #000;
+            --button-hover: #ddd;
+        }
+        
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: #fff;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 0;
             position: relative;
             overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
         }
         
         body::before {
@@ -30,7 +56,7 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: #000;
+            background: var(--stripe-color);
             z-index: 1000;
         }
         
@@ -42,11 +68,12 @@
         
         .header {
             margin-bottom: 60px;
-            border-bottom: 3px solid #000;
+            border-bottom: 3px solid var(--border-color);
             padding-bottom: 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: border 0.3s ease;
         }
         
         .header h1 {
@@ -74,9 +101,27 @@
             font-size: 1.2em;
         }
         
+        .theme-toggle {
+            background: var(--button-bg);
+            color: var(--button-text);
+            border: 2px solid var(--border-color);
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 0.8em;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--button-hover);
+        }
+        
         .nav-back {
-            background: #000;
-            color: #fff;
+            background: var(--button-bg);
+            color: var(--button-text);
             padding: 15px 30px;
             text-decoration: none;
             font-weight: 700;
@@ -84,18 +129,20 @@
             letter-spacing: 0.1em;
             text-transform: uppercase;
             display: inline-block;
+            transition: background 0.3s ease;
         }
         
         .nav-back:hover {
-            background: #333;
+            background: var(--button-hover);
         }
         
         .job-card {
-            background: #fff;
-            border: 3px solid #000;
+            background: var(--card-bg);
+            border: 3px solid var(--border-color);
             padding: 30px;
             margin-bottom: 30px;
             position: relative;
+            transition: all 0.3s ease;
         }
         
         .job-card::before {
@@ -103,23 +150,25 @@
             position: absolute;
             top: -12px;
             left: 20px;
-            background: #fff;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             padding: 0 10px;
             font-size: 0.75em;
             letter-spacing: 0.1em;
             font-weight: 700;
             text-transform: uppercase;
+            transition: background 0.3s ease;
         }
         
         .job-id {
             font-size: 0.85em;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 10px;
         }
         
         .job-url {
             font-size: 0.9em;
-            color: #000;
+            color: var(--text-primary);
             font-weight: 700;
             margin-bottom: 15px;
             word-break: break-all;
@@ -130,7 +179,7 @@
             gap: 30px;
             margin-bottom: 20px;
             font-size: 0.85em;
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .job-meta span {
@@ -150,8 +199,8 @@
         }
         
         .btn {
-            background: #000;
-            color: #fff;
+            background: var(--button-bg);
+            color: var(--button-text);
             border: none;
             padding: 12px 24px;
             font-weight: 700;
@@ -161,20 +210,21 @@
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
+            transition: background 0.3s ease;
         }
         
         .btn:hover {
-            background: #333;
+            background: var(--button-hover);
         }
         
         .btn-secondary {
-            background: #fff;
-            color: #000;
-            border: 2px solid #000;
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
         }
         
         .btn-secondary:hover {
-            background: #f0f0f0;
+            background: var(--card-bg);
         }
         
         .empty-state {
@@ -194,13 +244,41 @@
     <div class="container">
         <div class="header">
             <h1>My Transcripts</h1>
-            <a href="/" class="nav-back">← Back</a>
+            <div>
+                <button class="theme-toggle" onclick="toggleTheme()">● DARK</button>
+                <a href="/" class="nav-back">← Back</a>
+            </div>
         </div>
         
         <div id="jobs-container"></div>
     </div>
     
     <script>
+        // Theme management
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.body.setAttribute('data-theme', newTheme === 'dark' ? 'dark' : '');
+            localStorage.setItem('theme', newTheme);
+            
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = newTheme === 'dark' ? '○ LIGHT' : '● DARK';
+        }
+        
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                const btn = document.querySelector('.theme-toggle');
+                if (btn) btn.textContent = '○ LIGHT';
+            }
+        }
+        
+        // Initialize theme on page load
+        loadTheme();
+        
         async function loadHistory() {
             try {
                 const response = await fetch('/history');
