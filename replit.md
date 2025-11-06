@@ -1,7 +1,7 @@
-# DAWT-Transcribe v2.1
+# DAWT-Transcribe v2.2
 
 ## Overview
-DAWT-Transcribe v2.1 is a sovereign audio transcription API with multilingual enhancement built for processing Ghanaian Pidgin, breath-song clips, Instagram Reels, TikTok videos, and vocal samples into timestamped JSON outputs. Uses OpenAI's Whisper model + mT5 machine translation running locally (no cloud dependencies) to maintain data sovereignty. Features async job processing with browser notifications, persistent transcript history, and AI-friendly export formats (Markdown, JSON, ChatGPT-ready). Virgil Abloh/Off-White inspired UI with bold typography, quotation marks, and minimalist black-and-white industrial design. Designed to feed AutoCut's beat analysis and video editing workflows.
+DAWT-Transcribe v2.2 is a sovereign audio transcription API with multilingual enhancement built for processing Ghanaian Pidgin, breath-song clips, Instagram Reels, TikTok videos, and vocal samples into timestamped JSON outputs. Uses OpenAI's Whisper model + mT5 machine translation running locally (no cloud dependencies) to maintain data sovereignty. Features async job processing with browser notifications, persistent transcript history, AI-friendly export formats (Markdown, JSON, ChatGPT-ready), and transcription editing for building fine-tuning datasets. Virgil Abloh/Off-White inspired UI with bold typography, quotation marks, and minimalist black-and-white industrial design. Designed to feed AutoCut's beat analysis and video editing workflows.
 
 ## Purpose
 - Transcribe audio from URLs (TikTok, Instagram Reels, YouTube) or uploaded files
@@ -13,22 +13,35 @@ DAWT-Transcribe v2.1 is a sovereign audio transcription API with multilingual en
 - Provide JSON outputs for AutoCut integration
 - Prototype on Replit, then export to Mac Mini for sovereign iPhone Shortcuts workflow
 
-## Current State (v2.1)
+## Current State (v2.2)
 - FastAPI backend with async job processing (`/submit`, `/status`, `/results`, `/history`)
 - PostgreSQL database for persistent transcript storage
 - Browser notifications when transcriptions complete
 - Whisper tiny model for maximum speed
 - mT5-small multilingual translation models for 11 languages
 - Auto-detect Pidgin, Twi, Igbo, Yoruba, Hausa, Swahili, Amharic, French, Portuguese, Ewe, Dagbani
-- **NEW:** AI-friendly export formats (ChatGPT markdown, JSON download, structured copy)
-- **NEW:** "My Transcripts" history page with one-click access to past jobs
-- **NEW:** "Submit & Go" async mode - process in background, get notified when ready
+- **NEW v2.2:** Transcription editing with contenteditable UI
+- **NEW v2.2:** Training data export (original→corrected pairs for Whisper fine-tuning)
+- **NEW v2.2:** Dark/light mode theme toggle with industrial aesthetic
+- AI-friendly export formats (ChatGPT markdown, JSON download, structured copy)
+- "My Transcripts" history page with one-click access to past jobs
+- "Submit & Go" async mode - process in background, get notified when ready
 - Virgil Abloh/Off-White inspired frontend UI
 - yt-dlp integration for TikTok/Instagram/YouTube audio extraction
 - CORS enabled for future React Native mobile bridge
 - Graceful fallback when MT models unavailable
 
 ## Recent Changes
+- **2025-11-06 v2.2.0:** Transcription editing + training dataset builder
+  - **Edit Mode:** Click "✏ Edit" to enable contenteditable fields for transcript and segments
+  - **Save Corrections:** "💾 Save" button stores edits to database with timestamp
+  - **Training Export:** "📊 Export Training Data" downloads original→corrected pairs as JSON
+  - **Database Schema:** Added `corrected_text`, `corrected_segments`, `corrected_at` columns
+  - **Endpoints:** `POST /correct/{job_id}` for saving, `GET /export/training` for dataset export
+  - **Fine-tuning Ready:** Export format includes timestamps, language codes, and segment metadata
+  - **Visual Feedback:** Green border when editing, dashed borders on segments, success alerts
+  - **Architect Review:** PASS - all features tested end-to-end with Arabic TikTok video
+
 - **2025-11-06 v2.1.0:** Async processing + AI export upgrade
   - **Database Integration:** PostgreSQL storage for all transcription jobs
   - **Async Processing:** `/submit` endpoint with background job processing
