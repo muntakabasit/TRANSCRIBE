@@ -587,17 +587,20 @@
                 <div class="section-header">
                     <h3>Full Transcript</h3>
                     <div>
+                        <button class="copy-btn" id="editBtn" onclick="toggleEditMode()" style="background: #4CAF50;">✏ Edit</button>
+                        <button class="copy-btn" id="saveBtn" onclick="saveCorrections()" style="display: none; background: #2196F3;">💾 Save</button>
                         <button class="copy-btn" onclick="copyTranscript()">Copy Text</button>
                         <button class="copy-btn" onclick="downloadMarkdown()">Download MD</button>
                     </div>
                 </div>
-                <div class="transcript-text" id="transcript"></div>
+                <div class="transcript-text" id="transcript" contenteditable="false"></div>
             </div>
             
             <div class="segments" id="segmentsContainer">
                 <div class="section-header">
                     <h3>Timestamped Segments</h3>
                     <div>
+                        <button class="copy-btn" onclick="exportTrainingData()">📊 Export Training Data</button>
                         <button class="copy-btn" onclick="copySegments()">Copy JSON</button>
                         <button class="copy-btn" onclick="downloadJSON()">Download JSON</button>
                         <button class="copy-btn" onclick="copyForAI()">Copy for AI</button>
@@ -804,6 +807,111 @@
         }
         
         let currentData = null;
+        let editMode = false;
+        
+        function toggleEditMode() {
+            editMode = !editMode;
+            const editBtn = document.getElementById('editBtn');
+            const saveBtn = document.getElementById('saveBtn');
+            const transcript = document.getElementById('transcript');
+            
+            if (editMode) {
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                transcript.contentEditable = 'true';
+                transcript.style.border = '2px solid #4CAF50';
+                transcript.style.padding = '15px';
+                
+                // Make segments editable
+                document.querySelectorAll('.segment .text').forEach(el => {
+                    el.contentEditable = 'true';
+                    el.style.border = '1px dashed var(--border-color)';
+                    el.style.padding = '5px';
+                });
+            } else {
+                editBtn.style.display = 'inline-block';
+                saveBtn.style.display = 'none';
+                transcript.contentEditable = 'false';
+                transcript.style.border = 'none';
+                transcript.style.padding = '0';
+                
+                // Make segments non-editable
+                document.querySelectorAll('.segment .text').forEach(el => {
+                    el.contentEditable = 'false';
+                    el.style.border = 'none';
+                    el.style.padding = '0';
+                });
+            }
+        }
+        
+        async function saveCorrections() {
+            if (!currentData || !currentData.job_id) {
+                alert('No transcription to save');
+                return;
+            }
+            
+            const correctedText = document.getElementById('transcript').textContent;
+            const correctedSegments = [];
+            
+            document.querySelectorAll('.segment').forEach((segEl, i) => {
+                const textEl = segEl.querySelector('.text');
+                const timeEl = segEl.querySelector('.time');
+                
+                if (currentData.segments[i]) {
+                    correctedSegments.push({
+                        start: currentData.segments[i].start,
+                        end: currentData.segments[i].end,
+                        text: textEl ? textEl.textContent : currentData.segments[i].text
+                    });
+                }
+            });
+            
+            try {
+                const response = await fetch(`/correct/${currentData.job_id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        corrected_text: correctedText,
+                        corrected_segments: correctedSegments
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Corrections saved! You can now export training data.');
+                    toggleEditMode();  // Exit edit mode
+                    currentData.corrected_text = correctedText;
+                    currentData.corrected_segments = correctedSegments;
+                } else {
+                    alert('Failed to save corrections: ' + (result.message || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('Error saving corrections: ' + err.message);
+            }
+        }
+        
+        async function exportTrainingData() {
+            try {
+                const response = await fetch('/export/training');
+                const data = await response.json();
+                
+                if (data.total_corrections === 0) {
+                    alert('No corrections saved yet. Edit and save some transcriptions first!');
+                    return;
+                }
+                
+                // Download as JSON
+                const json = JSON.stringify(data.training_pairs, null, 2);
+                downloadFile(json, 'training_data.json', 'application/json');
+                
+                alert(`✅ Exported ${data.total_corrections} training pairs!`);
+            } catch (err) {
+                console.error('Export error:', err);
+                alert('Error exporting training data: ' + err.message);
+            }
+        }
         
         function displayResults(data) {
             currentData = data;

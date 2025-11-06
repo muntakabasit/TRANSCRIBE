@@ -28,6 +28,9 @@ class TranscriptionJob(Base):
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+    corrected_text = Column(Text, nullable=True)
+    corrected_segments = Column(Text, nullable=True)  # JSON string
+    corrected_at = Column(DateTime, nullable=True)
 
 Base.metadata.create_all(bind=engine)
 

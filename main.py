@@ -469,7 +469,10 @@ async def get_results(job_id: str, db: Session = Depends(get_db)):
         "segment_count": job.segment_count,
         "processing_time": job.processing_time,
         "created_at": job.created_at.isoformat(),
-        "completed_at": job.completed_at.isoformat()
+        "completed_at": job.completed_at.isoformat(),
+        "corrected_text": job.corrected_text,
+        "corrected_segments": json.loads(job.corrected_segments) if job.corrected_segments else None,
+        "corrected_at": job.corrected_at.isoformat() if job.corrected_at else None
     })
 
 @app.get("/history")
@@ -495,6 +498,59 @@ async def get_history(limit: int = 20, db: Session = Depends(get_db)):
 
 from sqlalchemy.orm import sessionmaker
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=__import__('database').engine)
+
+@app.post("/correct/{job_id}")
+async def save_corrections(job_id: str, request: Request, db: Session = Depends(get_db)):
+    """Save user corrections for a transcription"""
+    job = db.query(TranscriptionJob).filter(TranscriptionJob.id == job_id).first()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    data = await request.json()
+    
+    job.corrected_text = data.get("corrected_text")
+    job.corrected_segments = json.dumps(data.get("corrected_segments")) if data.get("corrected_segments") else None
+    job.corrected_at = datetime.utcnow()
+    
+    db.commit()
+    
+    logger.info(f"[{job_id}] Corrections saved")
+    
+    return JSONResponse({
+        "success": True,
+        "message": "Corrections saved successfully"
+    })
+
+@app.get("/export/training")
+async def export_training_data(db: Session = Depends(get_db)):
+    """Export all corrections as training data pairs"""
+    jobs = db.query(TranscriptionJob).filter(
+        TranscriptionJob.corrected_text.isnot(None)
+    ).all()
+    
+    training_pairs = []
+    for job in jobs:
+        if job.corrected_segments:
+            original_segments = json.loads(job.segments) if job.segments else []
+            corrected_segments = json.loads(job.corrected_segments)
+            
+            for i, (orig, corr) in enumerate(zip(original_segments, corrected_segments)):
+                if orig.get("text") != corr.get("text"):
+                    training_pairs.append({
+                        "job_id": job.id,
+                        "segment_index": i,
+                        "original": orig.get("text"),
+                        "corrected": corr.get("text"),
+                        "language": job.detected_language,
+                        "timestamp_start": orig.get("start"),
+                        "timestamp_end": orig.get("end")
+                    })
+    
+    return JSONResponse({
+        "total_corrections": len(training_pairs),
+        "training_pairs": training_pairs
+    })
 
 @app.get("/")
 def root():
