@@ -362,9 +362,9 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                 info = ydl.extract_info(url, download=True)
                 audio_path = ydl.prepare_filename(info)
             
-            # Check video duration (limit to 15 minutes to prevent crashes)
+            # Check video duration (limit to 21 minutes to prevent crashes)
             video_duration = info.get('duration', 0)
-            max_duration = 900  # 15 minutes
+            max_duration = 1260  # 21 minutes (buffer for ~20 min videos)
             if video_duration > max_duration:
                 raise ValueError(f"⚠️ Video too long ({video_duration//60} minutes). Maximum: {max_duration//60} minutes. Please use shorter videos to prevent server crashes.")
             

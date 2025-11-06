@@ -38,7 +38,7 @@ translation:
 
 processing:
   # Maximum video duration in minutes (prevents server crashes)
-  max_duration_minutes: 15
+  max_duration_minutes: 20
   
   # Default async mode (submit & go)
   async_default: true
