@@ -1,26 +1,48 @@
-# DAWT-Transcribe v2.0
+# DAWT-Transcribe v2.1
 
 ## Overview
-DAWT-Transcribe v2.0 is a sovereign audio transcription API with multilingual enhancement built for processing Ghanaian Pidgin, breath-song clips, Instagram Reels, TikTok videos, and vocal samples into timestamped JSON outputs. Uses OpenAI's Whisper model + mT5 machine translation running locally (no cloud dependencies) to maintain data sovereignty. Features a Virgil Abloh/Off-White inspired UI with bold typography, quotation marks, and minimalist black-and-white industrial design. Designed to feed AutoCut's beat analysis and video editing workflows.
+DAWT-Transcribe v2.1 is a sovereign audio transcription API with multilingual enhancement built for processing Ghanaian Pidgin, breath-song clips, Instagram Reels, TikTok videos, and vocal samples into timestamped JSON outputs. Uses OpenAI's Whisper model + mT5 machine translation running locally (no cloud dependencies) to maintain data sovereignty. Features async job processing with browser notifications, persistent transcript history, and AI-friendly export formats (Markdown, JSON, ChatGPT-ready). Virgil Abloh/Off-White inspired UI with bold typography, quotation marks, and minimalist black-and-white industrial design. Designed to feed AutoCut's beat analysis and video editing workflows.
 
 ## Purpose
 - Transcribe audio from URLs (TikTok, Instagram Reels, YouTube) or uploaded files
 - Enhance transcriptions with AI translation for African languages and dialects
 - Generate timestamped segments for breath-sync and cut detection
+- Export AI-friendly formats for ChatGPT/AI analysis (Markdown, JSON, structured text)
+- Async processing with browser notifications - submit and walk away
+- Persistent history for easy access to all past transcripts
 - Provide JSON outputs for AutoCut integration
 - Prototype on Replit, then export to Mac Mini for sovereign iPhone Shortcuts workflow
 
-## Current State (v2.0)
-- FastAPI backend with `/transcribe` endpoint operational
-- Whisper base model for fast local transcription
-- **NEW:** mT5-small multilingual translation models for 11 languages
-- **NEW:** Auto-detect Pidgin, Twi, Igbo, Yoruba, Hausa, Swahili, Amharic, French, Portuguese, Ewe, Dagbani
-- **NEW:** Virgil Abloh/Off-White inspired frontend UI
+## Current State (v2.1)
+- FastAPI backend with async job processing (`/submit`, `/status`, `/results`, `/history`)
+- PostgreSQL database for persistent transcript storage
+- Browser notifications when transcriptions complete
+- Whisper tiny model for maximum speed
+- mT5-small multilingual translation models for 11 languages
+- Auto-detect Pidgin, Twi, Igbo, Yoruba, Hausa, Swahili, Amharic, French, Portuguese, Ewe, Dagbani
+- **NEW:** AI-friendly export formats (ChatGPT markdown, JSON download, structured copy)
+- **NEW:** "My Transcripts" history page with one-click access to past jobs
+- **NEW:** "Submit & Go" async mode - process in background, get notified when ready
+- Virgil Abloh/Off-White inspired frontend UI
 - yt-dlp integration for TikTok/Instagram/YouTube audio extraction
 - CORS enabled for future React Native mobile bridge
 - Graceful fallback when MT models unavailable
 
 ## Recent Changes
+- **2025-11-06 v2.1.0:** Async processing + AI export upgrade
+  - **Database Integration:** PostgreSQL storage for all transcription jobs
+  - **Async Processing:** `/submit` endpoint with background job processing
+  - **Browser Notifications:** Get notified when transcripts are ready (no email needed)
+  - **History Page:** `/static/history.html` - access all past transcripts with one click
+  - **AI Export Formats:**
+    - "Copy for AI" button: ChatGPT-ready markdown with full context
+    - "Download MD" button: Clean markdown file for analysis
+    - "Download JSON" button: Structured JSON with metadata
+  - **Job Management:** `/status/{job_id}` and `/results/{job_id}` endpoints
+  - **Polling System:** Auto-refresh status every 3 seconds until complete
+  - **Improved UX:** "Submit & Go" checkbox for async mode (default on)
+  
+
 - **2025-11-05 v2.0.0:** Production-robust upgrade
   - **Robust API Structure:** Request IDs, processing time metrics, structured error responses
   - **Health Monitoring:** `/health` endpoint for server status checks

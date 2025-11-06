@@ -525,7 +525,10 @@
             <div class="transcript-box">
                 <div class="section-header">
                     <h3>Full Transcript</h3>
-                    <button class="copy-btn" onclick="copyTranscript()">Copy Text</button>
+                    <div>
+                        <button class="copy-btn" onclick="copyTranscript()">Copy Text</button>
+                        <button class="copy-btn" onclick="downloadMarkdown()">Download MD</button>
+                    </div>
                 </div>
                 <div class="transcript-text" id="transcript"></div>
             </div>
@@ -533,7 +536,11 @@
             <div class="segments" id="segmentsContainer">
                 <div class="section-header">
                     <h3>Timestamped Segments</h3>
-                    <button class="copy-btn" onclick="copySegments()">Copy JSON</button>
+                    <div>
+                        <button class="copy-btn" onclick="copySegments()">Copy JSON</button>
+                        <button class="copy-btn" onclick="downloadJSON()">Download JSON</button>
+                        <button class="copy-btn" onclick="copyForAI()">Copy for AI</button>
+                    </div>
                 </div>
                 <div id="segments"></div>
             </div>
@@ -761,6 +768,98 @@
             navigator.clipboard.writeText(json).then(() => {
                 alert('✓ JSON segments copied to clipboard!');
             });
+        }
+        
+        function copyForAI() {
+            if (!currentData) return;
+            
+            // Create AI-friendly formatted text
+            let aiText = `# Transcription Analysis\n\n`;
+            aiText += `**Video URL:** ${currentData.url || 'N/A'}\n`;
+            aiText += `**Language:** ${currentData.language.toUpperCase()}`;
+            if (currentData.detected_mt && currentData.detected_mt !== 'en') {
+                aiText += ` (${currentData.detected_mt.toUpperCase()})`;
+            }
+            aiText += `\n`;
+            aiText += `**Duration:** ${formatTime(currentData.duration)}\n`;
+            aiText += `**Total Segments:** ${currentData.segment_count || currentData.segments.length}\n\n`;
+            
+            aiText += `## Full Transcript\n\n${currentData.full_text}\n\n`;
+            
+            aiText += `## Timestamped Segments\n\n`;
+            currentData.segments.forEach((seg, i) => {
+                aiText += `### Segment ${i + 1} [${formatTime(seg.start)} - ${formatTime(seg.end)}]\n`;
+                aiText += `**Original:** ${seg.text}\n`;
+                if (seg.text_enhanced) {
+                    aiText += `**Enhanced Translation:** ${seg.text_enhanced}\n`;
+                }
+                aiText += `\n`;
+            });
+            
+            navigator.clipboard.writeText(aiText).then(() => {
+                alert('✓ AI-friendly format copied! Paste into ChatGPT or any AI for analysis.');
+            });
+        }
+        
+        function downloadMarkdown() {
+            if (!currentData) return;
+            
+            let md = `# Transcription: ${currentData.url || 'Audio File'}\n\n`;
+            md += `- **Language:** ${currentData.language.toUpperCase()}`;
+            if (currentData.detected_mt && currentData.detected_mt !== 'en') {
+                md += ` (${currentData.detected_mt.toUpperCase()})`;
+            }
+            md += `\n`;
+            md += `- **Duration:** ${formatTime(currentData.duration)}\n`;
+            md += `- **Processed:** ${currentData.created_at || new Date().toISOString()}\n\n`;
+            
+            md += `## Full Transcript\n\n${currentData.full_text}\n\n`;
+            
+            md += `## Timestamped Segments\n\n`;
+            currentData.segments.forEach((seg, i) => {
+                md += `### ${i + 1}. [${formatTime(seg.start)} - ${formatTime(seg.end)}]\n\n`;
+                md += `${seg.text}\n\n`;
+                if (seg.text_enhanced) {
+                    md += `**Translation:** ${seg.text_enhanced}\n\n`;
+                }
+            });
+            
+            downloadFile(md, 'transcript.md', 'text/markdown');
+        }
+        
+        function downloadJSON() {
+            if (!currentData) return;
+            
+            const exportData = {
+                metadata: {
+                    url: currentData.url || null,
+                    language: currentData.language,
+                    detected_language: currentData.detected_mt || currentData.language,
+                    mt_enhanced: currentData.mt_enhanced || false,
+                    duration: currentData.duration,
+                    segment_count: currentData.segment_count || currentData.segments.length,
+                    processing_time: currentData.processing_time,
+                    timestamp: currentData.created_at || new Date().toISOString()
+                },
+                full_text: currentData.full_text,
+                segments: currentData.segments
+            };
+            
+            const json = JSON.stringify(exportData, null, 2);
+            downloadFile(json, 'transcript.json', 'application/json');
+        }
+        
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert(`✓ Downloaded ${filename}`);
         }
         
         function formatTime(seconds) {
