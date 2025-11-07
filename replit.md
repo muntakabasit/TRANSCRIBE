@@ -34,16 +34,18 @@ The frontend UI is inspired by Virgil Abloh/Off-White, featuring:
 - **Data Persistence:** PostgreSQL database stores all transcription jobs and history.
 - **Multilingual Enhancement:** mT5-small models (1.2GB) are used for 11 languages, with keyword detection and explicit language selection.
 - **Transcription Editing:** Contenteditable UI for transcript and segment corrections, with export functionality for original-corrected pairs to build fine-tuning datasets.
-- **AI-Friendly Exports:** Provides ChatGPT-ready markdown, clean markdown files, and structured JSON with metadata.
+- **AI-Friendly Exports:** Provides ChatGPT-ready markdown, clean markdown files, structured JSON with metadata, CSV, and XLSX formats.
 - **Robust API:** Includes request IDs, processing time metrics, structured error responses, and a `/health` endpoint.
 - **Sovereignty:** All models (Whisper, mT5) run locally without external API calls, ensuring data privacy and control.
 - **Video Length Protection:** Implements a 15-minute video length limit to prevent server overload.
+- **Spreadsheet Export:** CSV and XLSX endpoints with auto-width columns, corrected text support, and MT Enhanced translations.
 
 ### Feature Specifications
 - **Input:** Accepts audio from URLs (TikTok, Instagram Reels, YouTube) or uploaded files.
-- **Output:** Generates timestamped JSON, Markdown, and ChatGPT-ready text.
+- **Output:** Generates timestamped JSON, Markdown, ChatGPT-ready text, CSV, and XLSX formats.
 - **Language Support:** Auto-detects and supports specific African and European languages, including Pidgin, Twi, Igbo, Yoruba, Hausa, Swahili, Amharic, French, Portuguese, Ewe, and Dagbani, with forced language selection for Whisper.
 - **Persistent History:** "My Transcripts" page provides one-click access to past jobs.
+- **Export Formats:** JSON, Markdown, ChatGPT-ready, CSV (UTF-8 BOM), XLSX (auto-width columns).
 
 ### System Design Choices
 - **Excel DNA Principles:** Adheres to principles of resilience, local-first processing, sovereignty, and decades-long usability.
@@ -61,12 +63,15 @@ The frontend UI is inspired by Virgil Abloh/Off-White, featuring:
 - **torch:** PyTorch for machine learning model execution.
 - **sentencepiece:** Tokenizer for mT5.
 - **PostgreSQL:** Relational database for persistent storage of transcription jobs and history.
+- **pandas:** DataFrame operations for CSV export.
+- **openpyxl:** Excel file generation for XLSX export.
 
 ### Mobile App (React Native)
 - **Expo:** React Native framework for cross-platform mobile development
 - **expo-av:** Audio recording functionality
 - **expo-document-picker:** File selection/upload
 - **expo-file-system:** File management
+- **expo-network:** Network connectivity detection and monitoring
 - **@expo/vector-icons:** Material Design icons
 
 ## Mobile App Features
@@ -79,3 +84,6 @@ The frontend UI is inspired by Virgil Abloh/Off-White, featuring:
 - **Platform Support:** iOS and Android via Expo Go
 - **Bundle ID:** com.dawt.transcribe
 - **Permissions:** Microphone access, storage access
+- **Network Resilience:** Offline detection, request timeouts (60s), automatic retries (3 attempts with exponential backoff)
+- **Polling Robustness:** Tolerates up to 5 consecutive transient failures during status polling
+- **User Feedback:** Clear error messages, retry progress indicators, connection status alerts
