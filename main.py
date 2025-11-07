@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 import whisper
 import yt_dlp
 import tempfile
@@ -16,6 +16,8 @@ from datetime import datetime
 import json
 from sqlalchemy.orm import Session
 from database import get_db, TranscriptionJob
+import pandas as pd
+import io
 
 logging.basicConfig(
     level=logging.INFO,
@@ -634,6 +636,87 @@ async def export_training_data(db: Session = Depends(get_db)):
         "total_corrections": len(training_pairs),
         "training_pairs": training_pairs
     })
+
+@app.get("/export/{job_id}/csv")
+async def export_csv(job_id: str, db: Session = Depends(get_db)):
+    """Export transcription as CSV file (Excel-compatible)"""
+    job = db.query(TranscriptionJob).filter(TranscriptionJob.id == job_id).first()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    segments = json.loads(job.segments) if job.segments else []
+    
+    data = []
+    for segment in segments:
+        data.append({
+            "Start Time": f"{segment.get('start', 0):.2f}",
+            "End Time": f"{segment.get('end', 0):.2f}",
+            "Duration": f"{segment.get('end', 0) - segment.get('start', 0):.2f}",
+            "Text": segment.get('text', '').strip(),
+            "Translation": segment.get('translation', '').strip() if segment.get('translation') else ''
+        })
+    
+    df = pd.DataFrame(data)
+    
+    output = io.StringIO()
+    df.to_csv(output, index=False)
+    output.seek(0)
+    
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode('utf-8-sig')),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=transcript_{job_id}.csv"}
+    )
+
+@app.get("/export/{job_id}/xlsx")
+async def export_xlsx(job_id: str, db: Session = Depends(get_db)):
+    """Export transcription as Excel file"""
+    job = db.query(TranscriptionJob).filter(TranscriptionJob.id == job_id).first()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    segments = json.loads(job.segments) if job.segments else []
+    
+    data = []
+    for segment in segments:
+        data.append({
+            "Start Time": f"{segment.get('start', 0):.2f}",
+            "End Time": f"{segment.get('end', 0):.2f}",
+            "Duration": f"{segment.get('end', 0) - segment.get('start', 0):.2f}",
+            "Text": segment.get('text', '').strip(),
+            "Translation": segment.get('translation', '').strip() if segment.get('translation') else ''
+        })
+    
+    df = pd.DataFrame(data)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Transcript')
+        
+        workbook = writer.book
+        worksheet = writer.sheets['Transcript']
+        
+        for column in worksheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            worksheet.column_dimensions[column_letter].width = adjusted_width
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=transcript_{job_id}.xlsx"}
+    )
 
 @app.get("/")
 def root():

@@ -1,3 +1,4 @@
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -15,10 +16,55 @@ htmlcov/
 dist/
 build/
 *.egg-info/
-.DS_Store
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
 *.swp
 *.swo
 *~
-.env
-.vscode/
-.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+/tmp/
+
+# Whisper cache
+~/.cache/whisper/
+
+# Temporary files
+temp/
+downloads/
+audio_*.mp3
+audio_*.mp4
+audio_*.m4a
+audio_*.wav
+
+# Design Scraper
+design-scraper/downloads/*
+!design-scraper/downloads/.gitkeep
+
+# Node.js / Expo
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.expo/
+.expo-shared/
+web-build/
