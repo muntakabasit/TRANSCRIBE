@@ -646,15 +646,21 @@ async def export_csv(job_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Job not found")
     
     segments = json.loads(job.segments) if job.segments else []
+    corrected_segments = json.loads(job.corrected_segments) if job.corrected_segments else None
     
     data = []
-    for segment in segments:
+    for i, segment in enumerate(segments):
+        corrected_seg = corrected_segments[i] if corrected_segments and i < len(corrected_segments) else None
+        
+        text = corrected_seg.get('text', segment.get('text', '')).strip() if corrected_seg else segment.get('text', '').strip()
+        translation = segment.get('text_enhanced', '').strip()
+        
         data.append({
             "Start Time": f"{segment.get('start', 0):.2f}",
             "End Time": f"{segment.get('end', 0):.2f}",
             "Duration": f"{segment.get('end', 0) - segment.get('start', 0):.2f}",
-            "Text": segment.get('text', '').strip(),
-            "Translation": segment.get('translation', '').strip() if segment.get('translation') else ''
+            "Text": text,
+            "MT Enhanced": translation if translation else ''
         })
     
     df = pd.DataFrame(data)
@@ -678,15 +684,21 @@ async def export_xlsx(job_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Job not found")
     
     segments = json.loads(job.segments) if job.segments else []
+    corrected_segments = json.loads(job.corrected_segments) if job.corrected_segments else None
     
     data = []
-    for segment in segments:
+    for i, segment in enumerate(segments):
+        corrected_seg = corrected_segments[i] if corrected_segments and i < len(corrected_segments) else None
+        
+        text = corrected_seg.get('text', segment.get('text', '')).strip() if corrected_seg else segment.get('text', '').strip()
+        translation = segment.get('text_enhanced', '').strip()
+        
         data.append({
             "Start Time": f"{segment.get('start', 0):.2f}",
             "End Time": f"{segment.get('end', 0):.2f}",
             "Duration": f"{segment.get('end', 0) - segment.get('start', 0):.2f}",
-            "Text": segment.get('text', '').strip(),
-            "Translation": segment.get('translation', '').strip() if segment.get('translation') else ''
+            "Text": text,
+            "MT Enhanced": translation if translation else ''
         })
     
     df = pd.DataFrame(data)
