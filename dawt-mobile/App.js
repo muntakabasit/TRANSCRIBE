@@ -63,9 +63,12 @@ export default function App() {
   const checkNetworkStatus = async () => {
     try {
       const networkState = await Network.getNetworkStateAsync();
-      setIsOnline(networkState.isConnected && networkState.isInternetReachable);
+      const online = networkState.isConnected && networkState.isInternetReachable;
+      setIsOnline(online);
+      return online;
     } catch (err) {
       console.warn('Network check failed:', err);
+      return false;
     }
   };
 
@@ -152,8 +155,8 @@ export default function App() {
 
   const uploadAudioFile = async (uri) => {
     try {
-      await checkNetworkStatus();
-      if (!isOnline) {
+      const online = await checkNetworkStatus();
+      if (!online) {
         Alert.alert(
           'No Connection',
           'Please check your internet connection and try again.'
@@ -211,8 +214,8 @@ export default function App() {
     }
 
     try {
-      await checkNetworkStatus();
-      if (!isOnline) {
+      const online = await checkNetworkStatus();
+      if (!online) {
         Alert.alert(
           'No Connection',
           'Please check your internet connection and try again.'
@@ -261,7 +264,9 @@ export default function App() {
 
   const pollForResult = async (jobId) => {
     let pollAttempts = 0;
+    let consecutiveFailures = 0;
     const maxPollAttempts = 150;
+    const maxConsecutiveFailures = 5;
 
     const interval = setInterval(async () => {
       try {
@@ -285,6 +290,7 @@ export default function App() {
         }
 
         const data = await response.json();
+        consecutiveFailures = 0;
         setProgress(data.progress || 'Processing...');
 
         if (data.status === 'completed') {
@@ -309,13 +315,19 @@ export default function App() {
           );
         }
       } catch (err) {
-        clearInterval(interval);
-        setLoading(false);
-        Alert.alert(
-          'Connection Error',
-          'Lost connection to server. Please check your connection and try again.',
-          [{ text: 'OK' }]
-        );
+        consecutiveFailures++;
+        
+        if (consecutiveFailures >= maxConsecutiveFailures) {
+          clearInterval(interval);
+          setLoading(false);
+          Alert.alert(
+            'Connection Error',
+            'Lost connection to server after multiple retries. Please check your connection and try again.',
+            [{ text: 'OK' }]
+          );
+        } else {
+          setProgress(`Connection issue (retry ${consecutiveFailures}/${maxConsecutiveFailures})...`);
+        }
       }
     }, 2000);
   };
