@@ -1,7 +1,9 @@
-# DAWT-Transcribe v2.3
+# DAWT-Transcribe v2.3 + Mobile App
 
 ## Overview
 DAWT-Transcribe v2.3 is a sovereign audio transcription API designed for processing multilingual audio, including Ghanaian Pidgin, breath-song clips, Instagram Reels, TikTok videos, and vocal samples. It outputs timestamped JSON using local OpenAI Whisper and mT5 machine translation models to ensure data sovereignty. Key features include asynchronous job processing with browser notifications, persistent transcript history, AI-friendly export formats (Markdown, JSON, ChatGPT-ready), and transcription editing for fine-tuning datasets. The UI is inspired by Virgil Abloh/Off-White, featuring bold typography, quotation marks, and a minimalist black-and-white industrial design. The system is built to integrate with AutoCut's beat analysis and video editing workflows.
+
+**NEW:** React Native mobile app (Expo) with audio recording, file upload, and URL transcription - same Virgil Abloh aesthetic on iOS/Android.
 
 ## User Preferences
 - **Sovereignty:** All processing must remain local (no cloud transcription services)
@@ -9,7 +11,10 @@ DAWT-Transcribe v2.3 is a sovereign audio transcription API designed for process
 - **Design:** Virgil Abloh/Off-White aesthetic - quotation marks, bold typography, black/white minimalism, industrial styling
 - **Integration focus:** Outputs designed for AutoCut beat analysis
 - **Workflow:** Prototype on Replit → Export to Mac Mini → iPhone Shortcuts integration
-- **New project launched:** Design Scraper - UI/UX extraction tool (running on port 6000)
+- **Active Projects:**
+  1. **DAWT-Transcribe** (Port 5000) - Web PWA + API backend
+  2. **Design Scraper** (Port 6000) - UI/UX extraction tool
+  3. **DAWT Mobile** (Port 8000) - React Native Expo app
 
 ## System Architecture
 
@@ -46,6 +51,8 @@ The frontend UI is inspired by Virgil Abloh/Off-White, featuring:
 - **Graceful Fallback:** If machine translation fails, the system returns Whisper-only output without errors.
 
 ## External Dependencies
+
+### Backend (Python)
 - **FastAPI:** Web framework for the backend API.
 - **Uvicorn:** ASGI server.
 - **openai-whisper:** Local Whisper model for transcription.
@@ -54,3 +61,21 @@ The frontend UI is inspired by Virgil Abloh/Off-White, featuring:
 - **torch:** PyTorch for machine learning model execution.
 - **sentencepiece:** Tokenizer for mT5.
 - **PostgreSQL:** Relational database for persistent storage of transcription jobs and history.
+
+### Mobile App (React Native)
+- **Expo:** React Native framework for cross-platform mobile development
+- **expo-av:** Audio recording functionality
+- **expo-document-picker:** File selection/upload
+- **expo-file-system:** File management
+- **@expo/vector-icons:** Material Design icons
+
+## Mobile App Features
+- **Audio Recording:** Record audio directly in the app with expo-av
+- **File Upload:** Select audio files from device storage
+- **URL Transcription:** Process TikTok/Instagram/YouTube videos
+- **Language Selection:** Choose from 11 African/European languages
+- **Results Display:** View timestamped transcripts
+- **Virgil Abloh UI:** Same industrial aesthetic as web PWA (4px stripe, quotation marks, bold typography)
+- **Platform Support:** iOS and Android via Expo Go
+- **Bundle ID:** com.dawt.transcribe
+- **Permissions:** Microphone access, storage access
