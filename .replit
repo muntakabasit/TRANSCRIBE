@@ -19,6 +19,10 @@ args = "dawt-transcribe-server"
 task = "workflow.run"
 args = "design-scraper"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "expo-mobile-app"
+
 [[workflows.workflow]]
 name = "dawt-transcribe-server"
 author = "agent"
@@ -43,6 +47,18 @@ waitForPort = 6000
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "expo-mobile-app"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd dawt-mobile && npx expo start --port 8000"
+waitForPort = 8000
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -58,6 +74,10 @@ externalPort = 3000
 [[ports]]
 localPort = 40313
 externalPort = 3001
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
 
 [nix]
 channel = "stable-25_05"

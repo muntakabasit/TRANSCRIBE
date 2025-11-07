@@ -1,29 +1,40 @@
 {
   "expo": {
-    "name": "dawt-mobile",
-    "slug": "dawt-mobile",
+    "name": "DAWT Transcribe",
+    "slug": "dawt-transcribe-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "description": "Sovereign audio transcription - 11 languages, local processing",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.dawt.transcribe",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app needs access to your microphone to record audio for transcription.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select audio files."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#000000"
       },
+      "package": "com.dawt.transcribe",
+      "permissions": ["RECORD_AUDIO", "READ_EXTERNAL_STORAGE"],
       "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "https://a2d75914-5640-4f09-af56-a4b9e0b7314a-00-1vzd5bc0pcz1x.janeway.replit.dev"
     }
   }
 }
