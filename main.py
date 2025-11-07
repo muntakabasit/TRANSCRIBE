@@ -191,6 +191,21 @@ async def transcribe(request: TranscribeRequest):
                 'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
                 'quiet': True,
                 'no_warnings': True,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'retries': 10,
+                'fragment_retries': 10,
+                'skip_unavailable_fragments': True,
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-us,en;q=0.5',
+                    'Sec-Fetch-Mode': 'navigate',
+                },
+                'extractor_args': {
+                    'instagram': {
+                        'api_type': 'graphql'
+                    }
+                }
             }
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -359,6 +374,21 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                 'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
                 'quiet': True,
                 'no_warnings': True,
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'retries': 10,
+                'fragment_retries': 10,
+                'skip_unavailable_fragments': True,
+                'http_headers': {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-us,en;q=0.5',
+                    'Sec-Fetch-Mode': 'navigate',
+                },
+                'extractor_args': {
+                    'instagram': {
+                        'api_type': 'graphql'
+                    }
+                }
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
@@ -467,8 +497,13 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                 job.error_message = "⚠️ TikTok Age Restriction: This video requires login to download (age-restricted or sensitive content). Please try a different public TikTok video."
             elif "Private video" in error_str or "This video is private" in error_str:
                 job.error_message = "⚠️ Private Video: This video is not publicly accessible. Please use a public video URL."
+            elif "rate-limit reached" in error_str or "login required" in error_str:
+                if "Instagram" in error_str:
+                    job.error_message = "⚠️ Instagram Block: Instagram is temporarily blocking downloads. This happens when too many requests are made. Please try: (1) A different Instagram Reel, (2) A TikTok or YouTube URL instead, or (3) Wait 10-15 minutes and try again."
+                else:
+                    job.error_message = "⚠️ Rate Limited: Too many requests to this platform. Please wait a few minutes and try again, or use a different video URL."
             elif "No video formats found" in error_str:
-                job.error_message = "⚠️ Download Failed: TikTok blocked this video. Try a different public TikTok, Instagram Reel, or YouTube URL."
+                job.error_message = "⚠️ Download Failed: This video is blocked or unavailable. Try a different public TikTok, Instagram Reel, or YouTube URL."
             else:
                 job.error_message = f"Error: {error_str}"
             
