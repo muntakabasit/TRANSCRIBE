@@ -14,8 +14,12 @@ import { StatusBar } from 'expo-status-bar';
 import * as DocumentPicker from 'expo-document-picker';
 import { Audio } from 'expo-av';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Network from 'expo-network';
 
 const API_URL = 'https://a2d75914-5640-4f09-af56-a4b9e0b7314a-00-1vzd5bc0pcz1x.janeway.replit.dev';
+const REQUEST_TIMEOUT = 60000;
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2000;
 
 const LANGUAGES = [
   { value: 'auto', label: 'ENGLISH (AUTO-DETECT)' },
@@ -40,6 +44,8 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [recording, setRecording] = useState(null);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -48,9 +54,54 @@ export default function App() {
         if (status !== 'granted') {
           Alert.alert('Permission Required', 'Audio recording permission is required');
         }
+        
+        checkNetworkStatus();
       }
     })();
   }, []);
+
+  const checkNetworkStatus = async () => {
+    try {
+      const networkState = await Network.getNetworkStateAsync();
+      setIsOnline(networkState.isConnected && networkState.isInternetReachable);
+    } catch (err) {
+      console.warn('Network check failed:', err);
+    }
+  };
+
+  const fetchWithTimeout = async (url, options = {}, timeout = REQUEST_TIMEOUT) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      return response;
+    } catch (error) {
+      clearTimeout(id);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      throw error;
+    }
+  };
+
+  const retryRequest = async (requestFn, maxRetries = MAX_RETRIES) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await requestFn();
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+        
+        setRetryCount(i + 1);
+        setProgress(`Connection failed. Retrying (${i + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (i + 1)));
+      }
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -101,90 +152,170 @@ export default function App() {
 
   const uploadAudioFile = async (uri) => {
     try {
+      await checkNetworkStatus();
+      if (!isOnline) {
+        Alert.alert(
+          'No Connection',
+          'Please check your internet connection and try again.'
+        );
+        return;
+      }
+
       setLoading(true);
       setProgress('Uploading audio...');
+      setRetryCount(0);
 
-      const formData = new FormData();
-      formData.append('audio_file', {
-        uri,
-        type: 'audio/m4a',
-        name: 'recording.m4a',
-      });
-      formData.append('language', selectedLanguage);
+      const uploadFn = async () => {
+        const formData = new FormData();
+        formData.append('audio_file', {
+          uri,
+          type: 'audio/m4a',
+          name: 'recording.m4a',
+        });
+        formData.append('language', selectedLanguage);
 
-      const response = await fetch(`${API_URL}/transcribe`, {
-        method: 'POST',
-        body: formData,
-      });
+        const response = await fetchWithTimeout(`${API_URL}/transcribe`, {
+          method: 'POST',
+          body: formData,
+        });
 
-      const data = await response.json();
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Upload failed (${response.status}): ${errorText}`);
+        }
+
+        return await response.json();
+      };
+
+      const data = await retryRequest(uploadFn);
       
       if (data.job_id) {
         pollForResult(data.job_id);
       } else {
-        throw new Error('No job ID returned');
+        throw new Error('No job ID returned from server');
       }
     } catch (err) {
       setLoading(false);
-      Alert.alert('Error', 'Upload failed: ' + err.message);
+      Alert.alert(
+        'Upload Failed',
+        err.message || 'Unable to upload audio file. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const handleUrlSubmit = async () => {
     if (!videoUrl.trim()) {
-      Alert.alert('Error', 'Please enter a video URL');
+      Alert.alert('Missing URL', 'Please enter a video URL from TikTok, Instagram, or YouTube');
       return;
     }
 
     try {
+      await checkNetworkStatus();
+      if (!isOnline) {
+        Alert.alert(
+          'No Connection',
+          'Please check your internet connection and try again.'
+        );
+        return;
+      }
+
       setLoading(true);
       setProgress('Downloading video...');
+      setRetryCount(0);
 
-      const response = await fetch(`${API_URL}/transcribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          video_url: videoUrl,
-          language: selectedLanguage,
-        }),
-      });
+      const submitFn = async () => {
+        const response = await fetchWithTimeout(`${API_URL}/transcribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            video_url: videoUrl,
+            language: selectedLanguage,
+          }),
+        });
 
-      const data = await response.json();
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail?.message || `Server error (${response.status})`);
+        }
+
+        return await response.json();
+      };
+
+      const data = await retryRequest(submitFn);
       
       if (data.job_id) {
         pollForResult(data.job_id);
       } else {
-        throw new Error('No job ID returned');
+        throw new Error('No job ID returned from server');
       }
     } catch (err) {
       setLoading(false);
-      Alert.alert('Error', 'Transcription failed: ' + err.message);
+      Alert.alert(
+        'Transcription Failed',
+        err.message || 'Unable to process video. Please verify the URL and try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
   const pollForResult = async (jobId) => {
+    let pollAttempts = 0;
+    const maxPollAttempts = 150;
+
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`${API_URL}/status/${jobId}`);
-        const data = await response.json();
+        pollAttempts++;
+
+        if (pollAttempts > maxPollAttempts) {
+          clearInterval(interval);
+          setLoading(false);
+          Alert.alert(
+            'Processing Timeout',
+            'The transcription is taking longer than expected. Please check the results page later.',
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+
+        const response = await fetchWithTimeout(`${API_URL}/status/${jobId}`, {}, 10000);
         
+        if (!response.ok) {
+          throw new Error(`Status check failed (${response.status})`);
+        }
+
+        const data = await response.json();
         setProgress(data.progress || 'Processing...');
 
         if (data.status === 'completed') {
           clearInterval(interval);
-          const resultResponse = await fetch(`${API_URL}/results/${jobId}`);
+          
+          const resultResponse = await fetchWithTimeout(`${API_URL}/results/${jobId}`);
+          if (!resultResponse.ok) {
+            throw new Error(`Failed to fetch results (${resultResponse.status})`);
+          }
+          
           const resultData = await resultResponse.json();
           setResult(resultData);
           setLoading(false);
+          setRetryCount(0);
         } else if (data.status === 'failed') {
           clearInterval(interval);
           setLoading(false);
-          Alert.alert('Error', data.error || 'Transcription failed');
+          Alert.alert(
+            'Transcription Failed',
+            data.error_message || data.error || 'The transcription process failed. Please try again.',
+            [{ text: 'OK' }]
+          );
         }
       } catch (err) {
         clearInterval(interval);
         setLoading(false);
-        Alert.alert('Error', 'Status check failed: ' + err.message);
+        Alert.alert(
+          'Connection Error',
+          'Lost connection to server. Please check your connection and try again.',
+          [{ text: 'OK' }]
+        );
       }
     }, 2000);
   };
