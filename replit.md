@@ -46,6 +46,7 @@ The frontend UI is inspired by Virgil Abloh/Off-White, featuring:
 - **Language Support:** Auto-detects and supports specific African and European languages, including Pidgin, Twi, Igbo, Yoruba, Hausa, Swahili, Amharic, French, Portuguese, Ewe, and Dagbani, with forced language selection for Whisper.
 - **Persistent History:** "My Transcripts" page provides one-click access to past jobs.
 - **Export Formats:** JSON, Markdown, ChatGPT-ready, CSV (UTF-8 BOM), XLSX (auto-width columns).
+- **Platform Reliability:** TikTok and YouTube work reliably; Instagram frequently blocks downloads due to aggressive rate-limiting and requires authentication cookies for consistent access.
 
 ### System Design Choices
 - **Excel DNA Principles:** Adheres to principles of resilience, local-first processing, sovereignty, and decades-long usability.
