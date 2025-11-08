@@ -15,9 +15,10 @@ import time
 from datetime import datetime
 import json
 from sqlalchemy.orm import Session
-from database import get_db, TranscriptionJob
+from database import get_db, TranscriptionJob, InstagramCookie
 import pandas as pd
 import io
+from crypto_utils import encrypt_cookie, decrypt_cookie
 
 logging.basicConfig(
     level=logging.INFO,
@@ -135,6 +136,57 @@ class TranscribeRequest(BaseModel):
             raise ValueError("URL must start with http:// or https://")
         return v
 
+class InstagramCookieRequest(BaseModel):
+    session_id: str
+    notes: Optional[str] = None
+
+def get_active_instagram_cookie(db: Session) -> Optional[str]:
+    """Get the most recent active Instagram cookie"""
+    cookie = db.query(InstagramCookie).filter(
+        InstagramCookie.is_active == True
+    ).order_by(InstagramCookie.created_at.desc()).first()
+    
+    if cookie:
+        cookie.last_used = datetime.utcnow()
+        db.commit()
+        return decrypt_cookie(cookie.session_id)
+    return None
+
+def build_ydl_opts(url: str, db: Session) -> dict:
+    """Build yt-dlp options with Instagram cookie injection if available"""
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
+        'quiet': True,
+        'no_warnings': True,
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'retries': 10,
+        'fragment_retries': 10,
+        'skip_unavailable_fragments': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-us,en;q=0.5',
+            'Sec-Fetch-Mode': 'navigate',
+        },
+        'extractor_args': {
+            'instagram': {
+                'api_type': 'graphql'
+            }
+        }
+    }
+    
+    if 'instagram.com' in url:
+        cookie = get_active_instagram_cookie(db)
+        if cookie:
+            logger.info("🔐 Using Instagram cookie for authenticated download")
+            ydl_opts['cookiefile'] = None
+            ydl_opts['http_headers']['Cookie'] = f'sessionid={cookie}'
+        else:
+            logger.warning("⚠️ No Instagram cookie configured - download may fail due to rate limits")
+    
+    return ydl_opts
+
 @app.get("/health")
 async def health_check():
     return JSONResponse({
@@ -161,8 +213,66 @@ async def api_info():
         "sovereignty": "100% local processing - no cloud APIs"
     })
 
+@app.post("/instagram/cookie")
+async def add_instagram_cookie(request: InstagramCookieRequest, db: Session = Depends(get_db)):
+    """Add Instagram session cookie for reliable downloads"""
+    try:
+        encrypted_session = encrypt_cookie(request.session_id)
+        
+        db.query(InstagramCookie).update({"is_active": False})
+        db.commit()
+        
+        new_cookie = InstagramCookie(
+            session_id=encrypted_session,
+            notes=request.notes,
+            is_active=True
+        )
+        db.add(new_cookie)
+        db.commit()
+        
+        logger.info("Instagram cookie added successfully")
+        return JSONResponse({
+            "success": True,
+            "message": "Instagram cookie added! Instagram downloads should now work reliably.",
+            "expires_info": "Instagram cookies typically last 30-90 days. Update when you see failures."
+        })
+    except Exception as e:
+        logger.error(f"Failed to add Instagram cookie: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/instagram/cookie/status")
+async def get_cookie_status(db: Session = Depends(get_db)):
+    """Check if Instagram cookie is configured"""
+    cookie = db.query(InstagramCookie).filter(
+        InstagramCookie.is_active == True
+    ).order_by(InstagramCookie.created_at.desc()).first()
+    
+    if cookie:
+        return JSONResponse({
+            "configured": True,
+            "created_at": cookie.created_at.isoformat(),
+            "last_used": cookie.last_used.isoformat() if cookie.last_used else None,
+            "notes": cookie.notes
+        })
+    else:
+        return JSONResponse({
+            "configured": False,
+            "message": "No Instagram cookie configured. Add one to enable reliable Instagram downloads."
+        })
+
+@app.delete("/instagram/cookie")
+async def delete_instagram_cookie(db: Session = Depends(get_db)):
+    """Delete/deactivate Instagram cookie"""
+    db.query(InstagramCookie).update({"is_active": False})
+    db.commit()
+    logger.info("Instagram cookie deactivated")
+    return JSONResponse({
+        "success": True,
+        "message": "Instagram cookie removed. Instagram downloads will use anonymous mode (may fail)."
+    })
+
 @app.post("/transcribe")
-async def transcribe(request: TranscribeRequest):
+async def transcribe(request: TranscribeRequest, db: Session = Depends(get_db)):
     start_time = time.time()
     request_id = f"req_{int(time.time() * 1000)}"
     
@@ -186,27 +296,7 @@ async def transcribe(request: TranscribeRequest):
         if request.url:
             logger.info(f"[{request_id}] Downloading audio from URL...")
             is_temp_file = True
-            ydl_opts = {
-                'format': 'bestaudio/best',
-                'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
-                'quiet': True,
-                'no_warnings': True,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'retries': 10,
-                'fragment_retries': 10,
-                'skip_unavailable_fragments': True,
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-us,en;q=0.5',
-                    'Sec-Fetch-Mode': 'navigate',
-                },
-                'extractor_args': {
-                    'instagram': {
-                        'api_type': 'graphql'
-                    }
-                }
-            }
+            ydl_opts = build_ydl_opts(request.url, db)
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(request.url, download=True)
@@ -369,27 +459,7 @@ def process_transcription_background(job_id: str, url: str, lang: str):
         try:
             # Download audio
             logger.info(f"[{job_id}] Downloading audio from URL...")
-            ydl_opts = {
-                'format': 'bestaudio/best',
-                'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
-                'quiet': True,
-                'no_warnings': True,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'retries': 10,
-                'fragment_retries': 10,
-                'skip_unavailable_fragments': True,
-                'http_headers': {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-us,en;q=0.5',
-                    'Sec-Fetch-Mode': 'navigate',
-                },
-                'extractor_args': {
-                    'instagram': {
-                        'api_type': 'graphql'
-                    }
-                }
-            }
+            ydl_opts = build_ydl_opts(url, db)
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 audio_path = ydl.prepare_filename(info)

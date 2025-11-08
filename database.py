@@ -32,6 +32,17 @@ class TranscriptionJob(Base):
     corrected_segments = Column(Text, nullable=True)  # JSON string
     corrected_at = Column(DateTime, nullable=True)
 
+class InstagramCookie(Base):
+    __tablename__ = "instagram_cookies"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used = Column(DateTime, nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+    notes = Column(Text, nullable=True)
+
 Base.metadata.create_all(bind=engine)
 
 def get_db():
