@@ -634,7 +634,45 @@
             </div>
             <div>
                 <button class="theme-toggle" onclick="toggleTheme()">● DARK</button>
+                <button class="theme-toggle" onclick="openInstagramSettings()" style="margin-right: 10px;">⚙ INSTAGRAM</button>
                 <a href="/static/history.html" class="nav-history">My Transcripts →</a>
+            </div>
+        </div>
+        
+        <div id="igModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; overflow-y: auto;">
+            <div style="max-width: 700px; margin: 50px auto; background: var(--card-bg); border: 3px solid var(--border-color); padding: 40px;">
+                <h2 style="margin-bottom: 20px; font-size: 1.8em;">INSTAGRAM COOKIE SETUP</h2>
+                <p style="line-height: 1.6; margin-bottom: 20px;">To bypass Instagram rate-limits, add your Instagram session cookie. This enables reliable downloads while keeping everything local.</p>
+                
+                <div id="igStatus" style="margin-bottom: 20px; padding: 15px; border-left: 4px solid var(--border-color); background: var(--bg-secondary);"></div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 700; margin-bottom: 10px;">SESSION ID COOKIE</label>
+                    <input type="text" id="igCookie" placeholder="Paste sessionid value here..." style="width: 100%; padding: 15px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-family: monospace;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-weight: 700; margin-bottom: 10px;">NOTES (OPTIONAL)</label>
+                    <input type="text" id="igNotes" placeholder="e.g., Added 2025-11-08" style="width: 100%; padding: 15px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+                </div>
+                
+                <details style="margin-bottom: 20px; border-left: 4px solid var(--border-color); padding-left: 15px;">
+                    <summary style="cursor: pointer; font-weight: 700; margin-bottom: 10px;">HOW TO GET YOUR COOKIE</summary>
+                    <ol style="line-height: 1.8; padding-left: 20px;">
+                        <li>Open Instagram in your browser and log in</li>
+                        <li>Press <strong>F12</strong> to open Developer Tools</li>
+                        <li>Go to <strong>Application</strong> tab → <strong>Cookies</strong> → https://www.instagram.com</li>
+                        <li>Find <strong>sessionid</strong> in the list</li>
+                        <li>Copy the <strong>Value</strong> and paste above</li>
+                    </ol>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: var(--text-secondary);">⚠️ Cookies typically last 30-90 days. Update when Instagram downloads fail.</p>
+                </details>
+                
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="saveInstagramCookie()" style="flex: 1; padding: 15px; background: var(--button-bg); color: var(--button-text); border: none; font-weight: 700; cursor: pointer;">SAVE COOKIE →</button>
+                    <button onclick="deleteInstagramCookie()" style="padding: 15px 30px; background: transparent; color: var(--text-primary); border: 2px solid var(--border-color); font-weight: 700; cursor: pointer;">DELETE</button>
+                    <button onclick="closeInstagramSettings()" style="padding: 15px 30px; background: transparent; color: var(--text-primary); border: 2px solid var(--border-color); font-weight: 700; cursor: pointer;">CLOSE</button>
+                </div>
             </div>
         </div>
         
@@ -648,7 +686,7 @@
                     autocomplete="off"
                 >
                 <div style="margin-top: 8px; font-size: 0.85em; color: var(--text-secondary); line-height: 1.4;">
-                    ⚠️ <strong>Instagram often blocks downloads.</strong> For best results, use <strong>TikTok or YouTube URLs</strong>.
+                    ⚠️ <strong>Instagram often blocks downloads.</strong> Click <strong>⚙ INSTAGRAM</strong> above to add your cookie, or use <strong>TikTok/YouTube URLs</strong>.
                 </div>
             </div>
             
@@ -1195,6 +1233,93 @@
                 handleSubmit();
             }
         });
+        
+        async function openInstagramSettings() {
+            document.getElementById('igModal').style.display = 'block';
+            await checkInstagramCookieStatus();
+        }
+        
+        function closeInstagramSettings() {
+            document.getElementById('igModal').style.display = 'none';
+        }
+        
+        async function checkInstagramCookieStatus() {
+            try {
+                const response = await fetch('/instagram/cookie/status');
+                const data = await response.json();
+                const statusDiv = document.getElementById('igStatus');
+                
+                if (data.configured) {
+                    statusDiv.innerHTML = `
+                        <strong style="color: #2ecc71;">✓ INSTAGRAM COOKIE CONFIGURED</strong><br>
+                        <span style="font-size: 0.9em;">Added: ${new Date(data.created_at).toLocaleString()}</span><br>
+                        ${data.last_used ? `<span style="font-size: 0.9em;">Last used: ${new Date(data.last_used).toLocaleString()}</span>` : ''}
+                        ${data.notes ? `<br><span style="font-size: 0.9em;">Notes: ${data.notes}</span>` : ''}
+                    `;
+                } else {
+                    statusDiv.innerHTML = '<strong style="color: #e74c3c;">✗ NO COOKIE CONFIGURED</strong><br><span style="font-size: 0.9em;">Add your Instagram cookie below to enable reliable downloads.</span>';
+                }
+            } catch (error) {
+                console.error('Failed to check cookie status:', error);
+            }
+        }
+        
+        async function saveInstagramCookie() {
+            const cookieValue = document.getElementById('igCookie').value.trim();
+            const notes = document.getElementById('igNotes').value.trim();
+            
+            if (!cookieValue) {
+                alert('Please paste your Instagram sessionid cookie value');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/instagram/cookie', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: cookieValue,
+                        notes: notes || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✓ Instagram cookie saved! Instagram downloads should now work reliably.');
+                    document.getElementById('igCookie').value = '';
+                    document.getElementById('igNotes').value = '';
+                    await checkInstagramCookieStatus();
+                } else {
+                    alert('Failed to save cookie: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error saving cookie: ' + error.message);
+            }
+        }
+        
+        async function deleteInstagramCookie() {
+            if (!confirm('Delete Instagram cookie? You will need to add it again to use Instagram downloads.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/instagram/cookie', {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✓ Instagram cookie deleted');
+                    await checkInstagramCookieStatus();
+                } else {
+                    alert('Failed to delete cookie');
+                }
+            } catch (error) {
+                alert('Error deleting cookie: ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>
