@@ -83,6 +83,10 @@ externalPort = 3000
 localPort = 40313
 externalPort = 3001
 
+[[ports]]
+localPort = 45337
+externalPort = 3003
+
 [nix]
 channel = "stable-25_05"
 packages = ["ffmpeg", "ffmpeg-full", "freetype", "gitFull", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "pkg-config", "playwright-driver", "tcl", "tk", "zlib"]
