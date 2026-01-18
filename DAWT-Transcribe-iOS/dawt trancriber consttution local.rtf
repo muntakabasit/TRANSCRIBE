@@ -1,0 +1,121 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Claude, you are a senior iOS engineer + UX architect rebuilding DAWT-Transcribe as a shippable App Store app.\
+\
+DAWT CONSTITUTION (HARD GATES)\
+- Design for tired people, not optimal ones (fatigue, stress, low literacy, bad connectivity, partial compliance).\
+- Auntie Test: does it make an auntie feel more capable, not smaller?\
+- No-Shame: no guilt prompts, no panic red, no countdown pressure, no scarcity theatre. Failure is private + reversible.\
+- Tech humility: no novelty features without real friction reduction.\
+- Constraint reads confidence: fewer screens, fewer choices, consistent system.\
+\
+PARSERS WE ARE LOCKING IN\
+1) Perception follows rules (Gestalt): proximity, similarity, regions, connections override distance, continuity, closure, figure-ground. \'93Parsed, not guessed.\'94\
+2) Saturation Budget: neutrals 0\'9610%; UI elements 50\'9690% selectively; brand accent 70\'96100% for ONE primary per screen. High saturation tires eyes.\
+3) Von Restorff / One Loud Thing: one bold CTA on a calm screen wins. If everything is loud, nothing is.\
+4) Desperation Moment: users switch tools at maximum pain/pressure, not because you\'92re \'93best.\'94 Design for the 2am beach interview scenario.\
+\
+PRODUCT SCOPE (v1.0 SHIP THIS WEEK)\
+This is Product A: DAWT-Transcribe (fast voice/audio -> text -> share).\
+DO NOT turn it into a knowledge management tool (no tags, search, filters, sorting, metadata forms, segment editing, tabs, dashboards).\
+\
+SCREENS (2 total; History optional as 3rd)\
+1) Home\
+2) Result\
+(Optional 3) History list (simple recent list only)\
+\
+HOME SCREEN (must be calm + premium)\
+- Title: DAWT-TRANSCRIBE (quiet title; orientation, not theatre)\
+- One primary CTA: \'93New transcription\'94\
+- History link only if there are items (optional)\
+Interaction: tapping \'93New transcription\'94 opens an iOS Action Sheet (NOT a new screen):\
+- Record audio\
+- Import audio file\
+- Transcribe from link (URL)\
+- Cancel\
+\
+URL TRANSCRIPTION (KEY PART)\
+- \'93Transcribe from link\'94 opens a small bottom sheet (NOT a full screen):\
+  - Title: \'93Paste a link\'94\
+  - One URL field (autofocus; if clipboard contains a URL, prefill or suggest)\
+  - Primary: \'93Transcribe\'94\
+  - Secondary: Cancel\
+  - Helper: \'93Direct audio/video links work best (mp3, m4a, mp4).\'94\
+- Behavior: show \'93Fetching audio\'85\'94 then \'93Transcribing\'85 You can leave this screen.\'94\
+- If unsupported/blocked: \'93Couldn\'92t use that link. Try a direct audio/video link.\'94\
+- Do NOT promise YouTube/TikTok/etc in v1 unless robust and legal.\
+\
+RESULT SCREEN (the product)\
+Top bar:\
+- Back (left)\
+- Share (right) -> iOS Share Sheet\
+Header:\
+- \'93Transcription complete\'94 (or \'93Transcribing\'85\'94 state)\
+- Small helper: \'93Tap Share to send or save.\'94\
+Body:\
+- Transcript with timestamps in a single column (high legibility; monospaced digits for timestamps)\
+Bottom:\
+- Primary CTA: \'93New transcription\'94\
+No tabs. No extra actions competing.\
+\
+EXPORT / SHARE (v1.0)\
+- One action: Share in top-right.\
+- Generate automatically and share:\
+  - .txt\
+  - .md\
+- No export settings screens.\
+- Filenames:\
+  DAWT_Transcribe_YYYY-MM-DD_HHMM_<Source>.md (and .txt)\
+- Markdown format:\
+  # Transcription\
+  Source: <filename or url>\
+  Date: <auto>\
+  00:13 \'97 line\'85\
+  00:22 \'97 line\'85\
+- Optional: long-press transcript for \'93Copy all\'94 (no extra buttons required).\
+\
+VISUAL SYSTEM (premium + calm, consistent)\
+- Warm off-white background (paper-like), not pure white.\
+- One accent gold/yellow used ONLY for primary CTA and tiny highlights.\
+- SF Pro system font, strong hierarchy, generous line-height.\
+- Hairline separators, soft surfaces; avoid heavy outlines.\
+- Touch targets 44pt minimum.\
+- Squint test: only the primary CTA \'93shouts.\'94\
+\
+ARCHITECTURE REQUIREMENTS (shippable)\
+- SwiftUI\
+- Clean separation: UI / Domain / Data\
+- async/await\
+- Persist history locally (choose simplest reliable: file-based JSON store or CoreData; justify choice).\
+- Save transcript artifacts with: id, createdAt, sourceType (record/file/url), sourceName, duration (if available), transcriptText.\
+- Safe state handling: if app backgrounds mid-transcription, keep draft safe and resume or fail gracefully without losing work.\
+\
+TRANSCRIPTION ENGINE\
+Pick ONE approach that is realistic for v1 and implement it:\
+- If WhisperKit is present, wire it properly.\
+- If still stubbed, include stub for UI tests but ensure the architecture supports real transcription.\
+URL fetch:\
+- download direct media URL to temp file (with size guardrails and clear errors)\
+- then transcribe\
+\
+NO-SHAME COPY (use this tone)\
+- \'93Transcribing\'85 You can leave this screen.\'94\
+- \'93Transcription complete. Tap Share to send or save.\'94\
+- \'93Couldn\'92t finish right now. Your audio is safe. Try again when you\'92re ready.\'94\
+- \'93Couldn\'92t use that link. Try a direct audio/video link.\'94\
+\
+DELIVERABLES\
+1) File/module structure plan\
+2) SwiftUI code for Home, Result, URL sheet, Action Sheet, History (optional)\
+3) Data model + persistence implementation\
+4) Export generator for .txt and .md + Share Sheet presentation\
+5) State/error handling implementation with the no-shame copy\
+6) App Store checklist: permissions (mic), privacy notes, accessibility, testing steps\
+\
+CONSTRAINT\
+If you propose anything outside v1 scope, label it \'93v1.1+\'94 and do NOT include it in code.}

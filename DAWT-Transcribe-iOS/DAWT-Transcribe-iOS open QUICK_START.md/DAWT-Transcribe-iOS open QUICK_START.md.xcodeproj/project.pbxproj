@@ -1,0 +1,583 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		F20C83B72F19BF9D0049713A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F20C83A12F19BF9B0049713A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F20C83A82F19BF9B0049713A;
+			remoteInfo = "DAWT-Transcribe-iOS open QUICK_START.md";
+		};
+		F20C83C12F19BF9D0049713A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F20C83A12F19BF9B0049713A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F20C83A82F19BF9B0049713A;
+			remoteInfo = "DAWT-Transcribe-iOS open QUICK_START.md";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		F20C83A92F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DAWT-Transcribe-iOS open QUICK_START.md.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F20C83B62F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DAWT-Transcribe-iOS open QUICK_START.mdTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F20C83C02F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DAWT-Transcribe-iOS open QUICK_START.mdUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		F20C83AB2F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "DAWT-Transcribe-iOS open QUICK_START.md";
+			sourceTree = "<group>";
+		};
+		F20C83B92F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "DAWT-Transcribe-iOS open QUICK_START.mdTests";
+			sourceTree = "<group>";
+		};
+		F20C83C32F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "DAWT-Transcribe-iOS open QUICK_START.mdUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		F20C83A62F19BF9B0049713A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20C83B32F19BF9D0049713A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20C83BD2F19BF9D0049713A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F20C83A02F19BF9B0049713A = {
+			isa = PBXGroup;
+			children = (
+				F20C83AB2F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */,
+				F20C83B92F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests */,
+				F20C83C32F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests */,
+				F20C83AA2F19BF9B0049713A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F20C83AA2F19BF9B0049713A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F20C83A92F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md.app */,
+				F20C83B62F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests.xctest */,
+				F20C83C02F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		F20C83A82F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F20C83CA2F19BF9D0049713A /* Build configuration list for PBXNativeTarget "DAWT-Transcribe-iOS open QUICK_START.md" */;
+			buildPhases = (
+				F20C83A52F19BF9B0049713A /* Sources */,
+				F20C83A62F19BF9B0049713A /* Frameworks */,
+				F20C83A72F19BF9B0049713A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F20C83AB2F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */,
+			);
+			name = "DAWT-Transcribe-iOS open QUICK_START.md";
+			packageProductDependencies = (
+			);
+			productName = "DAWT-Transcribe-iOS open QUICK_START.md";
+			productReference = F20C83A92F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md.app */;
+			productType = "com.apple.product-type.application";
+		};
+		F20C83B52F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F20C83CD2F19BF9D0049713A /* Build configuration list for PBXNativeTarget "DAWT-Transcribe-iOS open QUICK_START.mdTests" */;
+			buildPhases = (
+				F20C83B22F19BF9D0049713A /* Sources */,
+				F20C83B32F19BF9D0049713A /* Frameworks */,
+				F20C83B42F19BF9D0049713A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F20C83B82F19BF9D0049713A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F20C83B92F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests */,
+			);
+			name = "DAWT-Transcribe-iOS open QUICK_START.mdTests";
+			packageProductDependencies = (
+			);
+			productName = "DAWT-Transcribe-iOS open QUICK_START.mdTests";
+			productReference = F20C83B62F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F20C83BF2F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F20C83D02F19BF9D0049713A /* Build configuration list for PBXNativeTarget "DAWT-Transcribe-iOS open QUICK_START.mdUITests" */;
+			buildPhases = (
+				F20C83BC2F19BF9D0049713A /* Sources */,
+				F20C83BD2F19BF9D0049713A /* Frameworks */,
+				F20C83BE2F19BF9D0049713A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				F20C83C22F19BF9D0049713A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				F20C83C32F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests */,
+			);
+			name = "DAWT-Transcribe-iOS open QUICK_START.mdUITests";
+			packageProductDependencies = (
+			);
+			productName = "DAWT-Transcribe-iOS open QUICK_START.mdUITests";
+			productReference = F20C83C02F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F20C83A12F19BF9B0049713A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 2610;
+				TargetAttributes = {
+					F20C83A82F19BF9B0049713A = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
+					F20C83B52F19BF9D0049713A = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = F20C83A82F19BF9B0049713A;
+					};
+					F20C83BF2F19BF9D0049713A = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = F20C83A82F19BF9B0049713A;
+					};
+				};
+			};
+			buildConfigurationList = F20C83A42F19BF9B0049713A /* Build configuration list for PBXProject "DAWT-Transcribe-iOS open QUICK_START.md" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F20C83A02F19BF9B0049713A;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = F20C83AA2F19BF9B0049713A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				F20C83A82F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */,
+				F20C83B52F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdTests */,
+				F20C83BF2F19BF9D0049713A /* DAWT-Transcribe-iOS open QUICK_START.mdUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F20C83A72F19BF9B0049713A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20C83B42F19BF9D0049713A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20C83BE2F19BF9D0049713A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		F20C83A52F19BF9B0049713A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20C83B22F19BF9D0049713A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F20C83BC2F19BF9D0049713A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F20C83B82F19BF9D0049713A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F20C83A82F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */;
+			targetProxy = F20C83B72F19BF9D0049713A /* PBXContainerItemProxy */;
+		};
+		F20C83C22F19BF9D0049713A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F20C83A82F19BF9B0049713A /* DAWT-Transcribe-iOS open QUICK_START.md */;
+			targetProxy = F20C83C12F19BF9D0049713A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		F20C83C82F19BF9D0049713A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		F20C83C92F19BF9D0049713A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F20C83CB2F19BF9D0049713A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dawt.DAWT-Transcribe-iOS-open-QUICK-START-md";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F20C83CC2F19BF9D0049713A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dawt.DAWT-Transcribe-iOS-open-QUICK-START-md";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F20C83CE2F19BF9D0049713A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dawt.DAWT-Transcribe-iOS-open-QUICK-START-mdTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DAWT-Transcribe-iOS open QUICK_START.md.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DAWT-Transcribe-iOS open QUICK_START.md";
+			};
+			name = Debug;
+		};
+		F20C83CF2F19BF9D0049713A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dawt.DAWT-Transcribe-iOS-open-QUICK-START-mdTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DAWT-Transcribe-iOS open QUICK_START.md.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DAWT-Transcribe-iOS open QUICK_START.md";
+			};
+			name = Release;
+		};
+		F20C83D12F19BF9D0049713A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dawt.DAWT-Transcribe-iOS-open-QUICK-START-mdUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "DAWT-Transcribe-iOS open QUICK_START.md";
+			};
+			name = Debug;
+		};
+		F20C83D22F19BF9D0049713A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 29CKVV35K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "dawt.DAWT-Transcribe-iOS-open-QUICK-START-mdUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "DAWT-Transcribe-iOS open QUICK_START.md";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F20C83A42F19BF9B0049713A /* Build configuration list for PBXProject "DAWT-Transcribe-iOS open QUICK_START.md" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F20C83C82F19BF9D0049713A /* Debug */,
+				F20C83C92F19BF9D0049713A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F20C83CA2F19BF9D0049713A /* Build configuration list for PBXNativeTarget "DAWT-Transcribe-iOS open QUICK_START.md" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F20C83CB2F19BF9D0049713A /* Debug */,
+				F20C83CC2F19BF9D0049713A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F20C83CD2F19BF9D0049713A /* Build configuration list for PBXNativeTarget "DAWT-Transcribe-iOS open QUICK_START.mdTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F20C83CE2F19BF9D0049713A /* Debug */,
+				F20C83CF2F19BF9D0049713A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F20C83D02F19BF9D0049713A /* Build configuration list for PBXNativeTarget "DAWT-Transcribe-iOS open QUICK_START.mdUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F20C83D12F19BF9D0049713A /* Debug */,
+				F20C83D22F19BF9D0049713A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F20C83A12F19BF9B0049713A /* Project object */;
+}

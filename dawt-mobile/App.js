@@ -16,7 +16,7 @@ import { Audio } from 'expo-av';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Network from 'expo-network';
 
-const API_URL = 'https://a2d75914-5640-4f09-af56-a4b9e0b7314a-00-1vzd5bc0pcz1x.janeway.replit.dev';
+const API_URL = 'http://172.20.10.13:5001';
 const REQUEST_TIMEOUT = 60000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;

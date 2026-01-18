@@ -1,12 +1,38 @@
-from sqlalchemy import create_engine, Column, String, Integer, Float, Text, DateTime, Boolean
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from pathlib import Path
 from datetime import datetime
 import os
 
-DATABASE_URL = os.environ.get("DATABASE_URL")
+from dotenv import load_dotenv
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_recycle=300)
+# ============================================================
+# ENV + ENGINE BOOTSTRAP
+# ============================================================
+
+# Load .env from project root; fall back to local SQLite file
+ENV_PATH = Path(__file__).with_name(".env")
+load_dotenv(dotenv_path=ENV_PATH)
+
+DEFAULT_SQLITE = f"sqlite:///{Path(__file__).with_name('dawt_transcriber.db')}"
+DATABASE_URL = os.environ.get("DATABASE_URL", DEFAULT_SQLITE)
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    future=True,
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
