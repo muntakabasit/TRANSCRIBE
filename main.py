@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, Depends, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -19,6 +19,7 @@ from database import get_db, TranscriptionJob, InstagramCookie
 import pandas as pd
 import io
 from crypto_utils import encrypt_cookie, decrypt_cookie
+from pydub import AudioSegment
 
 logging.basicConfig(
     level=logging.INFO,
@@ -58,9 +59,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logger.info("Loading Whisper tiny model for maximum speed...")
-model = whisper.load_model("tiny")
-logger.info("Whisper tiny model loaded successfully")
+logger.info("Loading Whisper base model for better accent recognition...")
+model = whisper.load_model("base")
+logger.info("Whisper base model loaded successfully")
 
 logger.info("Loading multilingual MT models...")
 lang_models = {}
@@ -192,7 +193,7 @@ async def health_check():
     return JSONResponse({
         "status": "healthy",
         "version": VERSION,
-        "whisper_model": "tiny",
+        "whisper_model": "base",
         "mt_available": len(lang_models) > 0,
         "supported_languages": len(lang_models) + 1,
         "timestamp": datetime.utcnow().isoformat()
@@ -205,7 +206,7 @@ async def api_info():
         "version": VERSION,
         "description": "Sovereign audio transcription with multilingual enhancement",
         "features": {
-            "whisper_model": "tiny",
+            "whisper_model": "base",
             "mt_models": list(lang_models.keys()) if lang_models else [],
             "supported_platforms": ["TikTok", "Instagram", "YouTube", "Local Files"],
             "output_format": "JSON with timestamped segments"
@@ -581,6 +582,88 @@ def process_transcription_background(job_id: str, url: str, lang: str):
     finally:
         db.close()
 
+@app.post("/transcribe_file")
+async def transcribe_file(
+    file: UploadFile = File(...),
+    lang: str = Form("en"),
+    db: Session = Depends(get_db)
+):
+    """Transcribe an uploaded audio file"""
+    logger.info(f"📁 Received file upload: {file.filename}")
+
+    # Validate language
+    valid_langs = ["en", "pidgin", "twi", "igbo", "yoruba", "hausa",
+                   "swahili", "amharic", "french", "portuguese", "ewe", "dagbani"]
+    if lang not in valid_langs:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid language. Must be one of: {', '.join(valid_langs)}"
+        )
+
+    temp_audio_path = None
+
+    try:
+        # Save uploaded file to temp location
+        temp_dir = tempfile.mkdtemp()
+        temp_audio_path = os.path.join(temp_dir, file.filename)
+
+        with open(temp_audio_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        logger.info(f"💾 Saved file to: {temp_audio_path}")
+
+        # Get audio duration
+        audio = AudioSegment.from_file(temp_audio_path)
+        duration = len(audio) / 1000.0  # Convert ms to seconds
+
+        # Transcribe using Whisper
+        logger.info(f"🎙️ Starting transcription with language: {lang}")
+        result = model.transcribe(temp_audio_path, language=lang)
+
+        # Format segments
+        segments = []
+        for segment in result.get("segments", []):
+            segments.append({
+                "start": segment["start"],
+                "end": segment["end"],
+                "text": segment["text"].strip()
+            })
+
+        full_text = result.get("text", "").strip()
+        detected_language = result.get("language", lang)
+
+        logger.info(f"✅ Transcription complete: {len(segments)} segments")
+
+        response_data = {
+            "success": True,
+            "full_text": full_text,
+            "segments": segments,
+            "language": detected_language.upper(),
+            "duration": duration
+        }
+
+        return JSONResponse(add_metadata(response_data))
+
+    except Exception as e:
+        logger.error(f"❌ Transcription failed: {str(e)}")
+        return JSONResponse(
+            add_metadata({
+                "success": False,
+                "error": str(e)
+            }),
+            status_code=500
+        )
+    finally:
+        # Clean up temp file
+        if temp_audio_path and os.path.exists(temp_audio_path):
+            try:
+                os.remove(temp_audio_path)
+                os.rmdir(os.path.dirname(temp_audio_path))
+                logger.info(f"🗑️ Cleaned up temp file")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp file: {e}")
+
 @app.post("/submit")
 async def submit_job(request: TranscribeRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """Submit a transcription job and get job ID immediately"""
@@ -849,4 +932,4 @@ def history_page():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=5001)

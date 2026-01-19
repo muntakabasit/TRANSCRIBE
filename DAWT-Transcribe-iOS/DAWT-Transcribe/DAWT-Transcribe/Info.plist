@@ -2,8 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDisplayName</key>
+	<string>Transcribe</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>DAWT-Transcribe needs access to your microphone to record audio for transcription.</string>
+	<string>Transcribe needs access to your microphone to record audio for transcription.</string>
 	<key>UIBackgroundModes</key>
 	<array/>
 	<key>NSAppTransportSecurity</key>

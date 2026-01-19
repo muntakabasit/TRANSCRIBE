@@ -78,10 +78,17 @@ class TranscriptExporter {
 
         // Try to create files
         let tempDir = FileManager.default.temporaryDirectory
-        let timestamp = Int(transcription.date.timeIntervalSince1970)
+
+        // Generate filename: Transcribe_YYYY-MM-DD_HHMM_<Source>
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HHmm"
+        let dateString = dateFormatter.string(from: transcription.date)
+
+        let sourceType = transcription.sourceType.rawValue.capitalized
+        let baseFilename = "Transcribe_\(dateString)_\(sourceType)"
 
         // TXT file
-        let txtURL = tempDir.appendingPathComponent("transcription-\(timestamp).txt")
+        let txtURL = tempDir.appendingPathComponent("\(baseFilename).txt")
         print("📄 Attempting to create TXT at: \(txtURL.path)")
         if let txtData = generateTXT(transcription: transcription).data(using: .utf8) {
             do {
@@ -100,7 +107,7 @@ class TranscriptExporter {
         }
 
         // MD file
-        let mdURL = tempDir.appendingPathComponent("transcription-\(timestamp).md")
+        let mdURL = tempDir.appendingPathComponent("\(baseFilename).md")
         print("📄 Attempting to create MD at: \(mdURL.path)")
         if let mdData = generateMarkdown(transcription: transcription).data(using: .utf8) {
             do {

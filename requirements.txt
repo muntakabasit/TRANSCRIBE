@@ -24,3 +24,4 @@ cssutils
 pillow
 playwright
 webcolors
+pydub==0.25.1
