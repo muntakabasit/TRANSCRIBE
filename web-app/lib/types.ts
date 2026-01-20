@@ -9,7 +9,7 @@ export interface Transcript {
   segments: Segment[];
   language: string;
   duration?: number;
-  sourceType: 'recording' | 'url';
+  sourceType: 'recording' | 'url' | 'file';
   sourceURL?: string;
   date: string;
 }
