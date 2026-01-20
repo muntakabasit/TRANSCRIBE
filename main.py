@@ -104,6 +104,13 @@ def get_lang_models():
             lang_models = {}
     return lang_models
 
+@app.on_event("startup")
+async def startup_event():
+    """Log when the app starts"""
+    logger.info(f"DAWT-Transcribe v{VERSION} is starting up...")
+    logger.info("Models will be loaded on first use (lazy loading)")
+    logger.info("Ready to accept requests on 0.0.0.0:8080")
+
 # Health check endpoint for Fly.io
 @app.get("/health")
 async def health_check():

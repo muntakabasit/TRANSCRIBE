@@ -30,6 +30,7 @@ engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
+    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
     future=True,
 )
 
@@ -69,7 +70,12 @@ class InstagramCookie(Base):
     is_active = Column(Boolean, default=True)
     notes = Column(Text, nullable=True)
 
-Base.metadata.create_all(bind=engine)
+# Create tables - handle errors gracefully
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as e:
+    import logging
+    logging.warning(f"Failed to create database tables: {e}")
 
 def get_db():
     db = SessionLocal()
