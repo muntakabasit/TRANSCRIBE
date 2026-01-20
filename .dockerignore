@@ -1,0 +1,46 @@
+# Virtual environments
+.venv
+venv
+env
+ENV
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+README.md
+
+# Tests
+test.py
+tests/
+
+# iOS App
+DAWT-Transcribe-iOS/
+
+# Design scraper
+design-scraper/
+
+# Local files
+*.log
+.env.local
+.DS_Store
+
+# Database
+*.db
+*.sqlite
