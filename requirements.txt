@@ -5,6 +5,7 @@ yt-dlp==2024.10.22
 python-multipart==0.0.6
 requests>=2.32.2
 python-dotenv>=1.0.1
+cryptography>=41.0.0
 accelerate
 datasets
 evaluate
