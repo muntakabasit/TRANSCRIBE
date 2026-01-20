@@ -116,10 +116,10 @@ export default function AudioRecorder({ onTranscript, isTranscribing, setIsTrans
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Language
+        <label className="block text-[13px] font-medium tracking-wide text-dawt-text-secondary mb-2">
+          LANGUAGE
         </label>
         <LanguageSelector
           value={selectedLanguage}
@@ -129,36 +129,54 @@ export default function AudioRecorder({ onTranscript, isTranscribing, setIsTrans
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
-      <div className="flex flex-col items-center space-y-8 py-8">
-        {isRecording && (
-          <div className="text-4xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-500 animate-pulse">
-            {formatTime(recordingTime)}
-          </div>
-        )}
+      <div className="flex flex-col items-center space-y-10 py-12">
+        <div className="text-center space-y-3">
+          <h2 className="text-xl font-semibold tracking-wider text-dawt-text-primary">
+            {isRecording ? 'RECORDING' : isTranscribing ? 'TRANSCRIBING' : 'READY'}
+          </h2>
+
+          {isRecording && (
+            <p className="text-[13px] text-dawt-text-secondary">
+              {formatTime(recordingTime)}
+            </p>
+          )}
+
+          {!isRecording && !isTranscribing && (
+            <p className="text-[13px] text-dawt-text-secondary">
+              Tap to start recording
+            </p>
+          )}
+
+          {isTranscribing && (
+            <p className="text-[13px] text-dawt-text-secondary">
+              Processing your audio...
+            </p>
+          )}
+        </div>
 
         <button
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isTranscribing}
           className={`
-            relative w-28 h-28 rounded-full shadow-2xl transition-all transform hover:scale-110 active:scale-95
+            w-20 h-20 rounded-full transition-all
             ${
               isRecording
-                ? 'bg-gradient-to-br from-red-500 to-pink-500 animate-pulse shadow-red-500/50'
+                ? 'bg-red-500'
                 : isTranscribing
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 hover:shadow-indigo-500/50'
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-dawt-accent hover:bg-opacity-90'
             }
           `}
         >
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center justify-center">
             {isTranscribing ? (
               <svg
-                className="animate-spin h-10 w-10 text-white"
+                className="animate-spin h-8 w-8 text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -178,27 +196,19 @@ export default function AudioRecorder({ onTranscript, isTranscribing, setIsTrans
                 />
               </svg>
             ) : isRecording ? (
-              <div className="w-8 h-8 rounded-md bg-white shadow-lg" />
+              <div className="w-6 h-6 bg-white" />
             ) : (
-              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2.5}
+                  strokeWidth={2}
                   d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
                 />
               </svg>
             )}
           </div>
         </button>
-
-        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
-          {isTranscribing
-            ? 'Transcribing your audio...'
-            : isRecording
-            ? 'Tap to stop recording'
-            : 'Tap to start recording'}
-        </p>
       </div>
     </div>
   );

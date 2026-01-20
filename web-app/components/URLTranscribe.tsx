@@ -52,8 +52,8 @@ export default function URLTranscribe({ onTranscript, isTranscribing, setIsTrans
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Language
+        <label className="block text-[13px] font-medium tracking-wide text-dawt-text-secondary mb-2">
+          LANGUAGE
         </label>
         <LanguageSelector
           value={selectedLanguage}
@@ -63,8 +63,8 @@ export default function URLTranscribe({ onTranscript, isTranscribing, setIsTrans
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          YouTube URL or Audio Link
+        <label className="block text-[13px] font-medium tracking-wide text-dawt-text-secondary mb-2">
+          YOUTUBE URL OR AUDIO LINK
         </label>
         <input
           type="url"
@@ -72,20 +72,20 @@ export default function URLTranscribe({ onTranscript, isTranscribing, setIsTrans
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://youtube.com/watch?v=..."
           disabled={isTranscribing}
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 rounded-lg border border-dawt-divider bg-dawt-card text-dawt-text-primary placeholder-dawt-text-secondary placeholder-opacity-50 focus:outline-none focus:border-dawt-accent disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
 
       <button
         type="submit"
         disabled={!url.trim() || isTranscribing}
-        className="w-full py-3 px-6 rounded-lg font-medium text-white bg-gradient-to-r from-primary-500 to-accent-500 hover:shadow-lg transform transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+        className="w-full h-14 rounded-lg text-[14px] font-semibold tracking-wider text-white bg-dawt-accent hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isTranscribing ? (
           <span className="flex items-center justify-center gap-2">
@@ -93,10 +93,10 @@ export default function URLTranscribe({ onTranscript, isTranscribing, setIsTrans
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            Transcribing...
+            TRANSCRIBING...
           </span>
         ) : (
-          'Transcribe URL'
+          'TRANSCRIBE URL'
         )}
       </button>
     </form>

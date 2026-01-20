@@ -9,32 +9,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#4A90E2',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
-        },
-        accent: {
-          500: '#7B68EE',
-          600: '#6B5DD6',
+        dawt: {
+          background: '#F9F7F4',        // Warm off-white
+          card: '#FFFFFF',              // Pure white
+          accent: '#E8B44C',            // Warm gold
+          text: {
+            primary: '#1A1A1A',         // Near black
+            secondary: '#666666',       // Medium gray
+            timestamp: '#888888',       // Timestamp gray
+          },
+          divider: '#E0E0E0',           // Hairline divider
         }
       },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'scale-102': 'scale 0.3s ease-in-out',
-      },
-      keyframes: {
-        scale: {
-          '0%, 100%': { transform: 'scale(1)' },
-          '50%': { transform: 'scale(1.02)' },
-        }
+      letterSpacing: {
+        wider: '0.015em',    // +1.5pt equivalent
+        wide: '0.012em',     // +1.2pt equivalent
+        widest: '0.02em',    // +2pt equivalent
       },
     },
   },
