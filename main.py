@@ -49,7 +49,9 @@ def add_metadata(data: dict) -> dict:
         **data
     }
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Mount static directory only if it exists
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,35 +61,72 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-logger.info("Loading Whisper base model for better accent recognition...")
-model = whisper.load_model("base")
-logger.info("Whisper base model loaded successfully")
-
-logger.info("Loading multilingual MT models...")
+# Use lazy loading for models to speed up startup
+model = None
 lang_models = {}
+mt5_model = None
+mt5_tokenizer = None
 
-try:
-    logger.info("Loading mT5-small for African languages...")
-    mt5_model = MT5ForConditionalGeneration.from_pretrained("google/mt5-small")
-    mt5_tokenizer = MT5Tokenizer.from_pretrained("google/mt5-small")
-    
-    lang_models = {
-        "pidgin": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "pcm"},
-        "twi": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "tw"},
-        "igbo": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "ig"},
-        "yoruba": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "yo"},
-        "hausa": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "ha"},
-        "swahili": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "sw"},
-        "amharic": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "am"},
-        "french": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "fr"},
-        "portuguese": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "pt"},
-        "ewe": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "ee"},
-        "dagbani": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "dag"},
+def get_whisper_model():
+    """Lazy load Whisper model on first use"""
+    global model
+    if model is None:
+        logger.info("Loading Whisper base model for better accent recognition...")
+        model = whisper.load_model("base")
+        logger.info("Whisper base model loaded successfully")
+    return model
+
+def get_lang_models():
+    """Lazy load MT5 models on first use"""
+    global lang_models, mt5_model, mt5_tokenizer
+    if not lang_models:
+        try:
+            logger.info("Loading mT5-small for African languages...")
+            mt5_model = MT5ForConditionalGeneration.from_pretrained("google/mt5-small")
+            mt5_tokenizer = MT5Tokenizer.from_pretrained("google/mt5-small")
+
+            lang_models = {
+                "pidgin": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "pcm"},
+                "twi": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "tw"},
+                "igbo": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "ig"},
+                "yoruba": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "yo"},
+                "hausa": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "ha"},
+                "swahili": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "sw"},
+                "amharic": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "am"},
+                "french": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "fr"},
+                "portuguese": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "pt"},
+                "ewe": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "ee"},
+                "dagbani": {"model": mt5_model, "tokenizer": mt5_tokenizer, "lang_code": "dag"},
+            }
+            logger.info(f"MT models loaded for {len(lang_models)} languages")
+        except Exception as e:
+            logger.warning(f"Failed to load MT models: {e}. Translation features will be limited.")
+            lang_models = {}
+    return lang_models
+
+# Health check endpoint for Fly.io
+@app.get("/health")
+async def health_check():
+    """Health check endpoint that responds quickly without loading models"""
+    return {
+        "status": "healthy",
+        "version": VERSION,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
     }
-    logger.info(f"MT models loaded for {len(lang_models)} languages")
-except Exception as e:
-    logger.warning(f"Failed to load MT models: {e}. Translation features will be limited.")
-    lang_models = {}
+
+@app.get("/")
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "name": "DAWT-Transcribe",
+        "version": VERSION,
+        "status": "running",
+        "endpoints": {
+            "health": "/health",
+            "transcribe": "/transcribe",
+            "jobs": "/jobs"
+        }
+    }
 
 lang_keywords = {
     "pidgin": ["abeg", "wetin", "dey", "na", "fit"],
@@ -332,7 +371,8 @@ async def transcribe(request: TranscribeRequest, db: Session = Depends(get_db)):
         
         whisper_lang = whisper_lang_map.get(request.lang, "en")
         logger.info(f"[{request_id}] Forcing Whisper language: {whisper_lang} (user selected: {request.lang})")
-        result = model.transcribe(audio_path, language=whisper_lang)
+        whisper_model = get_whisper_model()
+        result = whisper_model.transcribe(audio_path, language=whisper_lang)
         
         whisper_time = time.time() - whisper_start
         logger.info(f"[{request_id}] Whisper completed in {whisper_time:.2f}s")
@@ -343,18 +383,20 @@ async def transcribe(request: TranscribeRequest, db: Session = Depends(get_db)):
         detected_lang = request.lang
         mt_enhanced = False
         
-        if detected_lang == "en" and lang_models:
+        models_dict = get_lang_models()
+
+        if detected_lang == "en" and models_dict:
             for lang_key, keywords in lang_keywords.items():
                 if any(kw.lower() in full_text.lower() for kw in keywords):
                     detected_lang = lang_key
                     logger.info(f"[{request_id}] Auto-detected language: {detected_lang}")
                     break
-        
-        if detected_lang != "en" and lang_models and detected_lang in lang_models:
+
+        if detected_lang != "en" and models_dict and detected_lang in models_dict:
             try:
                 logger.info(f"[{request_id}] Translating {detected_lang} to English...")
                 mt_start = time.time()
-                lm = lang_models[detected_lang]
+                lm = models_dict[detected_lang]
                 texts = [seg["text"] for seg in segments]
                 
                 lang_full_name = {
@@ -477,7 +519,8 @@ def process_transcription_background(job_id: str, url: str, lang: str):
             logger.info(f"[{job_id}] Starting Whisper transcription...")
             whisper_lang = whisper_lang_map.get(lang, "en")
             logger.info(f"[{job_id}] Forcing Whisper language: {whisper_lang} (user selected: {lang})")
-            result = model.transcribe(audio_path, language=whisper_lang)
+            whisper_model = get_whisper_model()
+            result = whisper_model.transcribe(audio_path, language=whisper_lang)
             
             segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
             full_text = result["text"]
@@ -486,16 +529,18 @@ def process_transcription_background(job_id: str, url: str, lang: str):
             detected_lang = lang
             mt_enhanced = False
             
-            if detected_lang == "en" and lang_models:
+            models_dict = get_lang_models()
+
+            if detected_lang == "en" and models_dict:
                 for lang_key, keywords in lang_keywords.items():
                     if any(kw.lower() in full_text.lower() for kw in keywords):
                         detected_lang = lang_key
                         break
-            
+
             # MT enhancement (if applicable)
-            if detected_lang != "en" and lang_models and detected_lang in lang_models:
+            if detected_lang != "en" and models_dict and detected_lang in models_dict:
                 try:
-                    lm = lang_models[detected_lang]
+                    lm = models_dict[detected_lang]
                     texts = [seg["text"] for seg in segments]
                     
                     lang_full_name = {
@@ -619,7 +664,8 @@ async def transcribe_file(
 
         # Transcribe using Whisper
         logger.info(f"🎙️ Starting transcription with language: {lang}")
-        result = model.transcribe(temp_audio_path, language=lang)
+        whisper_model = get_whisper_model()
+        result = whisper_model.transcribe(temp_audio_path, language=lang)
 
         # Format segments
         segments = []
