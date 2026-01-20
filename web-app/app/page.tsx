@@ -75,7 +75,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="text-center mt-12 space-y-3">
           <p className="text-[13px] text-dawt-text-secondary">
-            Supports 12+ languages including English, Pidgin, Twi, Igbo, Yoruba, and more.
+            Supports YouTube, TikTok, Instagram • 12+ languages including English, Pidgin, Twi, Igbo, Yoruba
           </p>
           <p>
             <a

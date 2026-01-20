@@ -64,16 +64,19 @@ export default function URLTranscribe({ onTranscript, isTranscribing, setIsTrans
 
       <div>
         <label className="block text-[13px] font-medium tracking-wide text-dawt-text-secondary mb-2">
-          YOUTUBE URL OR AUDIO LINK
+          VIDEO OR AUDIO URL
         </label>
         <input
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://youtube.com/watch?v=..."
+          placeholder="YouTube, TikTok, Instagram..."
           disabled={isTranscribing}
           className="w-full px-4 py-3 rounded-lg border border-dawt-divider bg-dawt-card text-dawt-text-primary placeholder-dawt-text-secondary placeholder-opacity-50 focus:outline-none focus:border-dawt-accent disabled:opacity-50 disabled:cursor-not-allowed"
         />
+        <p className="mt-2 text-[11px] text-dawt-text-secondary">
+          Supports YouTube, TikTok, Instagram, and more
+        </p>
       </div>
 
       {error && (
