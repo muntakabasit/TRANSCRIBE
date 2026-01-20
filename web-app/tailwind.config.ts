@@ -26,6 +26,16 @@ const config: Config = {
           600: '#6B5DD6',
         }
       },
+      animation: {
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'scale-102': 'scale 0.3s ease-in-out',
+      },
+      keyframes: {
+        scale: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.02)' },
+        }
+      },
     },
   },
   plugins: [],
