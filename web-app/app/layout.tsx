@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import PWAInstall from "@/components/PWAInstall";
 
 export const metadata: Metadata = {
   title: "DAWT-Transcribe | Free Audio Transcription",
-  description: "Convert speech to text with high accuracy. Support for YouTube, recordings, and 12+ languages.",
-  keywords: "transcribe, transcription, speech to text, audio, youtube, subtitle",
+  description: "Free audio transcription for everyone. Supports YouTube, TikTok, Instagram, and 12+ languages including Pidgin, Twi, Igbo, Yoruba.",
+  keywords: "transcribe, transcription, speech to text, audio, youtube, tiktok, instagram, pidgin, twi, igbo, yoruba",
   manifest: "/manifest.json",
-  themeColor: "#4A90E2",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+  themeColor: "#E8B44C",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -32,6 +27,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="antialiased">
+        <PWAInstall />
         {children}
       </body>
     </html>
