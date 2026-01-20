@@ -23,5 +23,5 @@ COPY . .
 # Expose port
 EXPOSE 8080
 
-# Start command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Start command with explicit logging
+CMD ["sh", "-c", "echo 'Starting uvicorn on 0.0.0.0:8080...' && uvicorn main:app --host 0.0.0.0 --port 8080 --log-level info"]
