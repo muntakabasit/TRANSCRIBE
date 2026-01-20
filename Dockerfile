@@ -20,8 +20,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
 # Expose port
 EXPOSE 8080
 
-# Start command with explicit logging
-CMD ["sh", "-c", "echo 'Starting uvicorn on 0.0.0.0:8080...' && uvicorn main:app --host 0.0.0.0 --port 8080 --log-level info"]
+# Use entrypoint script for better debugging
+CMD ["./entrypoint.sh"]
