@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
+import FileUpload from '@/components/FileUpload';
 import URLTranscribe from '@/components/URLTranscribe';
 import TranscriptDisplay from '@/components/TranscriptDisplay';
 import { Transcript } from '@/lib/types';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'record' | 'url'>('record');
+  const [activeTab, setActiveTab] = useState<'record' | 'upload' | 'url'>('record');
   const [transcript, setTranscript] = useState<Transcript | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
@@ -39,6 +40,16 @@ export default function Home() {
             Record
           </button>
           <button
+            onClick={() => setActiveTab('upload')}
+            className={`flex-1 py-3 px-4 rounded-lg text-[13px] font-medium tracking-wide transition-colors ${
+              activeTab === 'upload'
+                ? 'bg-dawt-accent text-white'
+                : 'bg-dawt-card text-dawt-text-secondary hover:bg-dawt-card/80'
+            }`}
+          >
+            Upload
+          </button>
+          <button
             onClick={() => setActiveTab('url')}
             className={`flex-1 py-3 px-4 rounded-lg text-[13px] font-medium tracking-wide transition-colors ${
               activeTab === 'url'
@@ -54,6 +65,12 @@ export default function Home() {
         <div className="bg-dawt-card rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5 mb-4">
           {activeTab === 'record' ? (
             <AudioRecorder
+              onTranscript={setTranscript}
+              isTranscribing={isTranscribing}
+              setIsTranscribing={setIsTranscribing}
+            />
+          ) : activeTab === 'upload' ? (
+            <FileUpload
               onTranscript={setTranscript}
               isTranscribing={isTranscribing}
               setIsTranscribing={setIsTranscribing}
