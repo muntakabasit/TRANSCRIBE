@@ -187,14 +187,8 @@ struct HomeView: View {
                 let urlString = url.absoluteString
                 let platform = Platform.detect(from: urlString)
 
-                print("🔗 Transcribing URL: \(urlString)")
-                print("🎯 Detected platform: \(platform.displayName)")
-
                 // Call backend API to transcribe URL
                 let response = try await APIClient.transcribeURL(url: urlString)
-
-                print("✅ Got response from backend")
-                print("📝 Segments count: \(response.segments?.count ?? 0)")
 
                 // Convert API response to segments
                 let segments = APIClient.convertToSegments(from: response)
@@ -219,15 +213,12 @@ struct HomeView: View {
                 }
 
             } catch let error as APIError {
-                // Show user-friendly error
-                print("❌ API Error: \(error.userMessage)")
                 await MainActor.run {
                     isTranscribingURL = false
                     urlErrorMessage = error.userMessage
                     showingURLError = true
                 }
             } catch {
-                print("❌ Network Error: \(error.localizedDescription)")
                 await MainActor.run {
                     isTranscribingURL = false
                     urlErrorMessage = "Network error: \(error.localizedDescription)"

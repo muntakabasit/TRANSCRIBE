@@ -120,6 +120,5 @@ struct URLTranscriptionSheet: View {
 
 #Preview {
     URLTranscriptionSheet(isPresented: .constant(true)) { url in
-        print("URL: \(url)")
     }
 }

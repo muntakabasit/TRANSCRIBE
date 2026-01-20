@@ -116,9 +116,7 @@ class TranscriptionManager: ObservableObject {
     func initializeWhisperKit() async {
         do {
             whisperKit = try await WhisperKit()
-            print("WhisperKit initialized successfully")
         } catch {
-            print("Failed to initialize WhisperKit: \(error)")
         }
     }
 

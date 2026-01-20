@@ -19,7 +19,6 @@ class AudioRecorder: NSObject, ObservableObject {
         // Request microphone permission
         AVAudioSession.sharedInstance().requestRecordPermission { [weak self] allowed in
             guard allowed else {
-                print("Microphone permission denied")
                 return
             }
 
@@ -53,7 +52,7 @@ class AudioRecorder: NSObject, ObservableObject {
             recordingURL = audioFilename
 
         } catch {
-            print("Failed to start recording: \(error)")
+            // Recording setup failed - error handled by UI state
         }
     }
 
@@ -64,7 +63,7 @@ class AudioRecorder: NSObject, ObservableObject {
         do {
             try AVAudioSession.sharedInstance().setActive(false)
         } catch {
-            print("Failed to deactivate audio session: \(error)")
+            // Audio session deactivation failed - non-critical
         }
     }
 }

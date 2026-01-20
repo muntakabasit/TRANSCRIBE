@@ -44,7 +44,6 @@ class BackgroundTaskManager {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("Failed to show notification: \(error)")
             }
         }
     }

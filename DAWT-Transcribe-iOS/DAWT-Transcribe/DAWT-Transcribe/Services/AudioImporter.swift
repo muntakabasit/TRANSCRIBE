@@ -36,11 +36,9 @@ class AudioImporter: ObservableObject {
                 try FileManager.default.copyItem(at: url, to: tempURL)
                 importedURL = tempURL
             } catch {
-                print("Failed to copy audio file: \(error)")
             }
 
         case .failure(let error):
-            print("Failed to import audio: \(error)")
         }
     }
 }

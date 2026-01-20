@@ -65,16 +65,13 @@ class TranscriptExporter {
 
         // CRITICAL: Always include plain text transcript first
         let plainText = getPlainText(transcription: transcription)
-        print("📝 Plain text length: \(plainText.count) characters")
 
         // Safety check: ensure we have text to share
         guard !plainText.isEmpty else {
-            print("🚨 Plain text is empty, returning fallback")
             return ["No transcript available"]
         }
 
         items.append(plainText)
-        print("✅ Added plain text to items (count: \(items.count))")
 
         // Try to create files
         let tempDir = FileManager.default.temporaryDirectory
@@ -89,43 +86,30 @@ class TranscriptExporter {
 
         // TXT file
         let txtURL = tempDir.appendingPathComponent("\(baseFilename).txt")
-        print("📄 Attempting to create TXT at: \(txtURL.path)")
         if let txtData = generateTXT(transcription: transcription).data(using: .utf8) {
             do {
                 try txtData.write(to: txtURL, options: .atomic)
                 if FileManager.default.fileExists(atPath: txtURL.path) {
-                    print("✅ TXT file created and verified")
                     items.append(txtURL)
-                } else {
-                    print("⚠️ TXT file write succeeded but file doesn't exist")
                 }
             } catch {
-                print("❌ Failed to write TXT file: \(error)")
+                // Silently fail - plain text is already in items
             }
-        } else {
-            print("❌ Failed to convert TXT to data")
         }
 
         // MD file
         let mdURL = tempDir.appendingPathComponent("\(baseFilename).md")
-        print("📄 Attempting to create MD at: \(mdURL.path)")
         if let mdData = generateMarkdown(transcription: transcription).data(using: .utf8) {
             do {
                 try mdData.write(to: mdURL, options: .atomic)
                 if FileManager.default.fileExists(atPath: mdURL.path) {
-                    print("✅ MD file created and verified")
                     items.append(mdURL)
-                } else {
-                    print("⚠️ MD file write succeeded but file doesn't exist")
                 }
             } catch {
-                print("❌ Failed to write MD file: \(error)")
+                // Silently fail - plain text is already in items
             }
-        } else {
-            print("❌ Failed to convert MD to data")
         }
 
-        print("📦 Total items prepared: \(items.count)")
         return items
     }
 }

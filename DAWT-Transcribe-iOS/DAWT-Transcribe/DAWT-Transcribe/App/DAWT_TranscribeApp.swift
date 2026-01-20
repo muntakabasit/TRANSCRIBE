@@ -28,9 +28,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Request notification permissions
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
             if granted {
-                print("Notification permission granted")
             } else if let error = error {
-                print("Notification permission error: \(error)")
             }
         }
 

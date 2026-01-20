@@ -13,9 +13,6 @@ struct ShareSheet: UIViewControllerRepresentable {
     let onDismiss: () -> Void
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        print("🎬 ShareSheet.makeUIViewController called with \(items.count) items")
-        print("📋 Items: \(items)")
-
         // Safety check
         let shareItems = items.isEmpty ? ["No content to share"] : items
 
@@ -24,8 +21,7 @@ struct ShareSheet: UIViewControllerRepresentable {
             applicationActivities: nil
         )
 
-        controller.completionWithItemsHandler = { activity, completed, _, error in
-            print("📤 Share completed: \(completed), activity: \(activity?.rawValue ?? "nil"), error: \(error?.localizedDescription ?? "none")")
+        controller.completionWithItemsHandler = { _, completed, _, _ in
             if completed {
                 onDismiss()
             }

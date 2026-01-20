@@ -51,13 +51,13 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				"Services/APIClient.swift",
-				"Services/AudioImporter.swift",
-				"Services/AudioRecorder.swift",
-				"Services/BackgroundTaskManager.swift",
-				"Services/TranscriptExporter.swift",
-				"Services/TranscriptionManager.swift",
-				"Services/URLDownloader.swift",
+				Services/APIClient.swift,
+				Services/AudioImporter.swift,
+				Services/AudioRecorder.swift,
+				Services/BackgroundTaskManager.swift,
+				Services/TranscriptExporter.swift,
+				Services/TranscriptionManager.swift,
+				Services/URLDownloader.swift,
 			);
 			target = F20C840E2F19C0AB0049713A /* DAWT-Transcribe */;
 		};
@@ -116,7 +116,7 @@
 				F20C841F2F19C0AD0049713A /* DAWT-TranscribeTests */,
 				F20C84292F19C0AD0049713A /* DAWT-TranscribeUITests */,
 				F20C84102F19C0AB0049713A /* Products */,
-				F20C84B62F19DCFC0049713A /* Services */,
+				F20C84B62F19DCFC0049713A /* DAWT-Transcribe/Services */,
 			);
 			sourceTree = "<group>";
 		};
@@ -130,7 +130,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		F20C84B62F19DCFC0049713A /* Services */ = {
+		F20C84B62F19DCFC0049713A /* DAWT-Transcribe/Services */ = {
 			isa = PBXGroup;
 			children = (
 				F20C84AF2F19DCFC0049713A /* APIClient.swift */,

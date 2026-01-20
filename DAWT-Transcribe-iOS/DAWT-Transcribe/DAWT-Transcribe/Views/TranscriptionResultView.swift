@@ -128,32 +128,23 @@ struct TranscriptionResultView: View {
     }
 
     private func shareTranscription() {
-        print("📤 Share button tapped")
-
         // CRITICAL: Always ensure items exist before presenting
         if shareItems.isEmpty {
-            print("⚠️ shareItems is empty, preparing synchronously...")
             let items = TranscriptExporter.prepareShareItems(transcription: transcription)
 
             if items.isEmpty {
-                print("❌ prepareShareItems returned empty, using plain text fallback")
                 shareItems = [TranscriptExporter.getPlainText(transcription: transcription)]
             } else {
-                print("✅ Prepared \(items.count) items")
                 shareItems = items
             }
             shareItemsPrepared = true
-        } else {
-            print("♻️ Using cached share items (\(shareItems.count) items)")
         }
 
         // Final safety check
         if shareItems.isEmpty {
-            print("🚨 CRITICAL: shareItems still empty, forcing plain text")
             shareItems = [TranscriptExporter.getPlainText(transcription: transcription)]
         }
 
-        print("🎬 Presenting share sheet with \(shareItems.count) items: \(shareItems)")
         showingShareSheet = true
     }
 }

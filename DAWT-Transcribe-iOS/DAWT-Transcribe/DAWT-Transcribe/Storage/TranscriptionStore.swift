@@ -22,7 +22,6 @@ class TranscriptionStore: ObservableObject {
         do {
             try FileManager.default.ensureDAWTDirectories()
         } catch {
-            print("Failed to create DAWT directories: \(error)")
         }
     }
 
@@ -50,7 +49,6 @@ class TranscriptionStore: ObservableObject {
             transcriptions.sort { $0.date > $1.date }
 
         } catch {
-            print("Failed to save transcription: \(error)")
         }
     }
 
@@ -93,7 +91,6 @@ class TranscriptionStore: ObservableObject {
             transcriptions = loaded
 
         } catch {
-            print("Failed to load transcriptions: \(error)")
             transcriptions = []
         }
     }
@@ -111,7 +108,6 @@ class TranscriptionStore: ObservableObject {
             transcriptions.removeAll { $0.id == transcription.id }
 
         } catch {
-            print("Failed to delete transcription: \(error)")
         }
     }
 
