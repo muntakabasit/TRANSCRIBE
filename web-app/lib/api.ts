@@ -20,7 +20,7 @@ export async function transcribeURL(url: string, language: string = 'en'): Promi
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Failed to transcribe' }));
-      throw new Error(error.error || 'Transcription failed');
+      throw new Error(error.detail?.message || error.error || 'Transcription failed');
     }
 
     return response.json();
@@ -48,7 +48,7 @@ export async function transcribeAudio(
     formData.append('file', audioBlob, 'recording.webm');
     formData.append('lang', language);
 
-    const response = await fetch(`${API_URL}/transcribe-file`, {
+    const response = await fetch(`${API_URL}/transcribe_file`, {
       method: 'POST',
       body: formData,
       signal: controller.signal,
@@ -58,7 +58,7 @@ export async function transcribeAudio(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'Failed to transcribe' }));
-      throw new Error(error.error || 'Transcription failed');
+      throw new Error(error.detail?.message || error.error || 'Transcription failed');
     }
 
     return response.json();
