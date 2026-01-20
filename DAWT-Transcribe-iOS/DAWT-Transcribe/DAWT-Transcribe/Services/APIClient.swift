@@ -10,9 +10,11 @@ import Foundation
 class APIClient {
     // MARK: - Configuration
 
-    // Development: Local network
-    // Production: Update to your production URL
-    static let baseURL = "http://172.20.10.2:5001"
+    // Production URL (Fly.io deployment)
+    static let baseURL = "https://transcribe-h3f8nq.fly.dev"
+
+    // Development: Local network (uncomment for local testing)
+    // static let baseURL = "http://172.20.10.2:5001"
 
     // MARK: - Transcription
 
