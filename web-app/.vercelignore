@@ -1,0 +1,29 @@
+# Ignore Python backend files
+../.venv
+../venv
+../env
+../*.py
+../requirements.txt
+../Dockerfile
+../fly.toml
+../__pycache__
+../.pytest_cache
+
+# Ignore iOS app
+../DAWT-Transcribe-iOS/
+
+# Ignore design scraper
+../design-scraper/
+
+# Ignore database files
+../*.db
+../*.sqlite
+
+# Ignore large model files
+../models/
+../*.pth
+../*.pt
+../*.bin
+
+# Only include web-app directory
+!./*
