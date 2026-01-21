@@ -386,86 +386,23 @@ async def transcribe(request: TranscribeRequest, db: Session = Depends(get_db)):
         
         segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
         full_text = result["text"]
-        
-        detected_lang = request.lang
-        mt_enhanced = False
-        
-        models_dict = get_lang_models()
 
-        if detected_lang == "en" and models_dict:
-            for lang_key, keywords in lang_keywords.items():
-                if any(kw.lower() in full_text.lower() for kw in keywords):
-                    detected_lang = lang_key
-                    logger.info(f"[{request_id}] Auto-detected language: {detected_lang}")
-                    break
-
-        if detected_lang != "en" and models_dict and detected_lang in models_dict:
-            try:
-                logger.info(f"[{request_id}] Translating {detected_lang} to English...")
-                mt_start = time.time()
-                lm = models_dict[detected_lang]
-                texts = [seg["text"] for seg in segments]
-                
-                lang_full_name = {
-                    "pidgin": "Pidgin English",
-                    "twi": "Twi",
-                    "igbo": "Igbo",
-                    "yoruba": "Yoruba",
-                    "hausa": "Hausa",
-                    "swahili": "Swahili",
-                    "amharic": "Amharic",
-                    "french": "French",
-                    "portuguese": "Portuguese",
-                    "ewe": "Ewe",
-                    "dagbani": "Dagbani"
-                }.get(detected_lang, detected_lang.title())
-                
-                inputs = lm["tokenizer"](
-                    [f"translate {lang_full_name} to English: {t}" for t in texts],
-                    return_tensors="pt",
-                    padding=True,
-                    truncation=True,
-                    max_length=128
-                )
-                
-                with torch.no_grad():
-                    translated = lm["model"].generate(
-                        inputs.input_ids,
-                        max_length=128,
-                        num_beams=4,
-                        early_stopping=True
-                    )
-                
-                trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
-                
-                for i, seg in enumerate(segments):
-                    if trans_texts[i].strip() and len(trans_texts[i]) > 3:
-                        seg["text_enhanced"] = trans_texts[i]
-                        mt_enhanced = True
-                
-                mt_time = time.time() - mt_start
-                logger.info(f"[{request_id}] Translation complete in {mt_time:.2f}s")
-            except Exception as e:
-                logger.warning(f"[{request_id}] Translation failed: {e}. Returning Whisper output only.")
-        
         if is_temp_file and audio_path and os.path.exists(audio_path):
             try:
                 os.remove(audio_path)
                 logger.info(f"[{request_id}] Cleaned up temporary file: {audio_path}")
             except Exception as e:
                 logger.warning(f"[{request_id}] Failed to cleanup temp file {audio_path}: {e}")
-        
+
         processing_time = time.time() - start_time
         logger.info(f"[{request_id}] ✅ Transcription complete in {processing_time:.2f}s")
-        
+
         return JSONResponse({
             "success": True,
             "request_id": request_id,
             "full_text": full_text,
             "segments": segments,
             "language": result["language"],
-            "detected_mt": detected_lang,
-            "mt_enhanced": mt_enhanced,
             "duration": result["segments"][-1]["end"] if segments else 0,
             "segment_count": len(segments),
             "processing_time": round(processing_time, 2),
@@ -531,77 +468,18 @@ def process_transcription_background(job_id: str, url: str, lang: str):
             
             segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
             full_text = result["text"]
-            
-            # Language detection
-            detected_lang = lang
-            mt_enhanced = False
-            
-            models_dict = get_lang_models()
 
-            if detected_lang == "en" and models_dict:
-                for lang_key, keywords in lang_keywords.items():
-                    if any(kw.lower() in full_text.lower() for kw in keywords):
-                        detected_lang = lang_key
-                        break
-
-            # MT enhancement (if applicable)
-            if detected_lang != "en" and models_dict and detected_lang in models_dict:
-                try:
-                    lm = models_dict[detected_lang]
-                    texts = [seg["text"] for seg in segments]
-                    
-                    lang_full_name = {
-                        "pidgin": "Pidgin English",
-                        "twi": "Twi",
-                        "igbo": "Igbo",
-                        "yoruba": "Yoruba",
-                        "hausa": "Hausa",
-                        "swahili": "Swahili",
-                        "amharic": "Amharic",
-                        "french": "French",
-                        "portuguese": "Portuguese",
-                        "ewe": "Ewe",
-                        "dagbani": "Dagbani"
-                    }.get(detected_lang, detected_lang.title())
-                    
-                    inputs = lm["tokenizer"](
-                        [f"translate {lang_full_name} to English: {t}" for t in texts],
-                        return_tensors="pt",
-                        padding=True,
-                        truncation=True,
-                        max_length=128
-                    )
-                    
-                    with torch.no_grad():
-                        translated = lm["model"].generate(
-                            inputs.input_ids,
-                            max_length=128,
-                            num_beams=4,
-                            early_stopping=True
-                        )
-                    
-                    trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
-                    
-                    for i, seg in enumerate(segments):
-                        if trans_texts[i].strip() and len(trans_texts[i]) > 3:
-                            seg["text_enhanced"] = trans_texts[i]
-                            mt_enhanced = True
-                except Exception as e:
-                    logger.warning(f"[{job_id}] Translation failed: {e}")
-            
             # Cleanup
             if audio_path and os.path.exists(audio_path):
                 os.remove(audio_path)
-            
+
             processing_time = time.time() - start_time
-            
+
             # Update job with results
             job.status = "completed"
             job.full_text = full_text
             job.segments = json.dumps(segments)
             job.detected_language = result["language"]
-            job.detected_mt = detected_lang
-            job.mt_enhanced = mt_enhanced
             job.duration = result["segments"][-1]["end"] if segments else 0
             job.segment_count = len(segments)
             job.processing_time = round(processing_time, 2)
@@ -688,68 +566,6 @@ async def transcribe_file(
         full_text = result.get("text", "").strip()
         detected_language = result.get("language", lang)
 
-        # Language detection and enhancement (same as /transcribe endpoint)
-        detected_lang = lang
-        mt_enhanced = False
-
-        models_dict = get_lang_models()
-
-        # Auto-detect language if user selected English
-        if detected_lang == "en" and models_dict:
-            for lang_key, keywords in lang_keywords.items():
-                if any(kw.lower() in full_text.lower() for kw in keywords):
-                    detected_lang = lang_key
-                    logger.info(f"Auto-detected language: {detected_lang}")
-                    break
-
-        # Apply MT enhancement for non-English languages
-        if detected_lang != "en" and models_dict and detected_lang in models_dict:
-            try:
-                logger.info(f"Translating {detected_lang} to English...")
-                lm = models_dict[detected_lang]
-                texts = [seg["text"] for seg in segments]
-
-                lang_full_name = {
-                    "pidgin": "Pidgin English",
-                    "twi": "Twi",
-                    "igbo": "Igbo",
-                    "yoruba": "Yoruba",
-                    "hausa": "Hausa",
-                    "swahili": "Swahili",
-                    "amharic": "Amharic",
-                    "french": "French",
-                    "portuguese": "Portuguese",
-                    "ewe": "Ewe",
-                    "dagbani": "Dagbani"
-                }.get(detected_lang, detected_lang.title())
-
-                inputs = lm["tokenizer"](
-                    [f"translate {lang_full_name} to English: {t}" for t in texts],
-                    return_tensors="pt",
-                    padding=True,
-                    truncation=True,
-                    max_length=128
-                )
-
-                with torch.no_grad():
-                    translated = lm["model"].generate(
-                        inputs.input_ids,
-                        max_length=128,
-                        num_beams=4,
-                        early_stopping=True
-                    )
-
-                trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
-
-                for i, seg in enumerate(segments):
-                    if trans_texts[i].strip() and len(trans_texts[i]) > 3:
-                        seg["text_enhanced"] = trans_texts[i]
-                        mt_enhanced = True
-
-                logger.info(f"Translation complete")
-            except Exception as e:
-                logger.warning(f"Translation failed: {e}. Returning Whisper output only.")
-
         logger.info(f"✅ Transcription complete: {len(segments)} segments")
 
         response_data = {
@@ -757,8 +573,6 @@ async def transcribe_file(
             "full_text": full_text,
             "segments": segments,
             "language": detected_language.upper(),
-            "detected_mt": detected_lang,
-            "mt_enhanced": mt_enhanced,
             "duration": duration
         }
 
