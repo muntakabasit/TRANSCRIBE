@@ -669,10 +669,12 @@ async def transcribe_file(
         audio = AudioSegment.from_file(temp_audio_path)
         duration = len(audio) / 1000.0  # Convert ms to seconds
 
-        # Transcribe using Whisper
+        # Transcribe using Whisper with proper language mapping
         logger.info(f"🎙️ Starting transcription with language: {lang}")
+        whisper_lang = whisper_lang_map.get(lang, "en")
+        logger.info(f"Forcing Whisper language: {whisper_lang} (user selected: {lang})")
         whisper_model = get_whisper_model()
-        result = whisper_model.transcribe(temp_audio_path, language=lang)
+        result = whisper_model.transcribe(temp_audio_path, language=whisper_lang)
 
         # Format segments
         segments = []
@@ -686,6 +688,68 @@ async def transcribe_file(
         full_text = result.get("text", "").strip()
         detected_language = result.get("language", lang)
 
+        # Language detection and enhancement (same as /transcribe endpoint)
+        detected_lang = lang
+        mt_enhanced = False
+
+        models_dict = get_lang_models()
+
+        # Auto-detect language if user selected English
+        if detected_lang == "en" and models_dict:
+            for lang_key, keywords in lang_keywords.items():
+                if any(kw.lower() in full_text.lower() for kw in keywords):
+                    detected_lang = lang_key
+                    logger.info(f"Auto-detected language: {detected_lang}")
+                    break
+
+        # Apply MT enhancement for non-English languages
+        if detected_lang != "en" and models_dict and detected_lang in models_dict:
+            try:
+                logger.info(f"Translating {detected_lang} to English...")
+                lm = models_dict[detected_lang]
+                texts = [seg["text"] for seg in segments]
+
+                lang_full_name = {
+                    "pidgin": "Pidgin English",
+                    "twi": "Twi",
+                    "igbo": "Igbo",
+                    "yoruba": "Yoruba",
+                    "hausa": "Hausa",
+                    "swahili": "Swahili",
+                    "amharic": "Amharic",
+                    "french": "French",
+                    "portuguese": "Portuguese",
+                    "ewe": "Ewe",
+                    "dagbani": "Dagbani"
+                }.get(detected_lang, detected_lang.title())
+
+                inputs = lm["tokenizer"](
+                    [f"translate {lang_full_name} to English: {t}" for t in texts],
+                    return_tensors="pt",
+                    padding=True,
+                    truncation=True,
+                    max_length=128
+                )
+
+                with torch.no_grad():
+                    translated = lm["model"].generate(
+                        inputs.input_ids,
+                        max_length=128,
+                        num_beams=4,
+                        early_stopping=True
+                    )
+
+                trans_texts = lm["tokenizer"].batch_decode(translated, skip_special_tokens=True)
+
+                for i, seg in enumerate(segments):
+                    if trans_texts[i].strip() and len(trans_texts[i]) > 3:
+                        seg["text_enhanced"] = trans_texts[i]
+                        mt_enhanced = True
+
+                logger.info(f"Translation complete")
+            except Exception as e:
+                logger.warning(f"Translation failed: {e}. Returning Whisper output only.")
+
         logger.info(f"✅ Transcription complete: {len(segments)} segments")
 
         response_data = {
@@ -693,6 +757,8 @@ async def transcribe_file(
             "full_text": full_text,
             "segments": segments,
             "language": detected_language.upper(),
+            "detected_mt": detected_lang,
+            "mt_enhanced": mt_enhanced,
             "duration": duration
         }
 
