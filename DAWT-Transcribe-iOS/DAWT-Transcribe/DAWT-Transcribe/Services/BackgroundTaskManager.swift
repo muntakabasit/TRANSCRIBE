@@ -101,6 +101,11 @@ class BackgroundTaskManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Clear pending notifications (called when new job starts)
+    func clearPendingNotifications() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    }
+
     /// Clear all pending/delivered notifications
     func clearAllNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()

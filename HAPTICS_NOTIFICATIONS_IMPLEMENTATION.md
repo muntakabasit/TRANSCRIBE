@@ -100,57 +100,22 @@ BackgroundTaskManager.shared.registerNotificationCategories()
 
 ## Integration Points
 
-### 3. **TranscriptionManager.swift** ⚠️ NEEDS UPDATE
+### 3. **TranscriptionManager.swift** ✅ COMPLETED
 
-Add haptic feedback at key moments:
+Haptic feedback following PDF spec: **ONLY on completion, NO haptics during progress**
 
-**Line 38 (after state update to .preparing):**
-```swift
-await updateState(.preparing)
-HapticsManager.shared.transcriptionStepCompleted()  // ADD THIS
-try await Task.sleep(nanoseconds: 500_000_000)
-```
+**Changes Made:**
+- Removed `@Published var notifyWhenReady` (now uses @AppStorage in toggle component)
+- Added `clearPendingNotifications()` call when new job starts
+- Added ONE haptic on completion: `HapticsManager.shared.transcriptionCompleted()`
+- Added ONE haptic on failure: `HapticsManager.shared.transcriptionFailed()`
+- Read notification preference from UserDefaults: `UserDefaults.standard.bool(forKey: "notifyWhenReady")`
+- Pass duration to notification: `notifyTranscriptionComplete(success: true, duration: duration)`
 
-**Line 48 (after state update to .listening):**
-```swift
-await updateState(.listening)
-HapticsManager.shared.transcriptionStepCompleted()  // ADD THIS
-```
-
-**Line 54 (after state update to .structuring):**
-```swift
-await updateState(.structuring)
-HapticsManager.shared.transcriptionStepCompleted()  // ADD THIS
-try await Task.sleep(nanoseconds: 300_000_000)
-```
-
-**Line 75 (after completion):**
-```swift
-isTranscribing = false
-}
-
-// ADD THIS - Haptic for completion
-HapticsManager.shared.transcriptionCompleted()
-
-// Notify user if opted in and app is backgrounded
-if notifyWhenReady {
-    BackgroundTaskManager.shared.notifyTranscriptionComplete(
-        success: true,
-        duration: duration  // Pass actual duration
-    )
-}
-```
-
-**Line 100 (after failure):**
-```swift
-isTranscribing = false
-}
-
-// ADD THIS - Haptic for failure
-HapticsManager.shared.transcriptionFailed()
-
-// Notify user of failure if opted in and backgrounded
-```
+**Philosophy (from PDF):**
+> "Haptics are confidence cues, not stimulation. Use sparingly."
+> "NO haptics during progress updates (Preparing → Listening → Structuring)"
+> "ONE success haptic on completion"
 
 ---
 
@@ -510,16 +475,22 @@ Verify these are enabled:
 ### ✅ Files Enhanced:
 2. `Services/BackgroundTaskManager.swift` - Rich notifications + actions
 
-### ⚠️ Files Requiring Updates:
-3. `Services/TranscriptionManager.swift` - Add haptic triggers (5 lines)
+### ✅ Files Updated Per PDF Spec:
+3. `Services/TranscriptionManager.swift` - ✅ One haptic on completion, @AppStorage integration, clearPending
+7. `Views/Components/NotificationToggle.swift` - ✅ @AppStorage, permission request on enable
+
+### ⚠️ Files Requiring Updates (Optional Enhancements):
 4. `Services/AudioRecorder.swift` - Add haptic triggers (2 lines)
 5. `Services/AudioImporter.swift` - Add haptic triggers (4 lines)
 6. `Views/HomeView.swift` - Add haptic triggers (2 lines)
-7. `Views/Components/NotificationToggle.swift` - Add haptic trigger (1 line)
 8. `Services/TranscriptExporter.swift` - Add haptic triggers (2 lines)
 9. `App/DAWT_TranscribeApp.swift` - Register notification categories (2 lines)
 
-**Total Updates Needed:** ~18 lines across 7 files
+**PDF Core Requirements Met:** ✅
+- ONE haptic on completion (not during progress)
+- @AppStorage for notification preference
+- Permission request only when toggle enabled
+- Clear pending notifications on new job start
 
 ---
 

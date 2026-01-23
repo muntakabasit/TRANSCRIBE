@@ -13,11 +13,13 @@ import Combine
 class TranscriptionManager: ObservableObject {
     @Published var currentTranscription: Transcription?
     @Published var isTranscribing = false
-    @Published var notifyWhenReady = false  // Optional notification toggle
 
     // MARK: - Transcription with 3-Step Progress
 
     func transcribe(audioURL: URL, sourceType: SourceType = .file, isVideoSource: Bool = false) async {
+        // Clear any pending notifications from previous jobs
+        BackgroundTaskManager.shared.clearPendingNotifications()
+
         // Start background task
         BackgroundTaskManager.shared.beginBackgroundTask(name: "Transcription")
 
@@ -71,9 +73,13 @@ class TranscriptionManager: ObservableObject {
                 isTranscribing = false
             }
 
+            // Haptic for completion (only one haptic, on success)
+            HapticsManager.shared.transcriptionCompleted()
+
             // Notify user if opted in and app is backgrounded
-            if notifyWhenReady {
-                BackgroundTaskManager.shared.notifyTranscriptionComplete(success: true)
+            let notifyPreference = UserDefaults.standard.bool(forKey: "notifyWhenReady")
+            if notifyPreference {
+                BackgroundTaskManager.shared.notifyTranscriptionComplete(success: true, duration: duration)
             }
 
         } catch {
@@ -94,8 +100,12 @@ class TranscriptionManager: ObservableObject {
                 isTranscribing = false
             }
 
+            // Haptic for failure
+            HapticsManager.shared.transcriptionFailed()
+
             // Notify user of failure if opted in and backgrounded
-            if notifyWhenReady {
+            let notifyPreference = UserDefaults.standard.bool(forKey: "notifyWhenReady")
+            if notifyPreference {
                 BackgroundTaskManager.shared.notifyTranscriptionComplete(success: false)
             }
         }
@@ -168,7 +178,6 @@ class TranscriptionManager: ObservableObject {
     func reset() {
         currentTranscription = nil
         isTranscribing = false
-        notifyWhenReady = false
     }
 }
 

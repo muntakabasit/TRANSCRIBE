@@ -2,13 +2,14 @@
 //  NotificationToggle.swift
 //  DAWT-Transcribe
 //
-//  Simple notification toggle for "Notify me when it's ready"
+//  Notification toggle with @AppStorage and permission request
 //
 
 import SwiftUI
+import UserNotifications
 
 struct NotificationToggle: View {
-    @Binding var isEnabled: Bool
+    @AppStorage("notifyWhenReady") private var notifyWhenReady = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -24,9 +25,23 @@ struct NotificationToggle: View {
 
             Spacer()
 
-            Toggle("", isOn: $isEnabled)
-                .labelsHidden()
-                .tint(DAWTDesign.Colors.accent)
+            Toggle("", isOn: Binding(
+                get: { notifyWhenReady },
+                set: { newValue in
+                    if newValue {
+                        // Request permission when user enables toggle
+                        requestNotificationPermission { granted in
+                            if granted {
+                                notifyWhenReady = true
+                            }
+                        }
+                    } else {
+                        notifyWhenReady = false
+                    }
+                }
+            ))
+            .labelsHidden()
+            .tint(DAWTDesign.Colors.accent)
         }
         .padding(16)
         .background(DAWTDesign.Colors.background)
@@ -35,6 +50,14 @@ struct NotificationToggle: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(DAWTDesign.Colors.divider, lineWidth: 1)
         )
+    }
+
+    private func requestNotificationPermission(completion: @escaping (Bool) -> Void) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            DispatchQueue.main.async {
+                completion(granted)
+            }
+        }
     }
 }
 
