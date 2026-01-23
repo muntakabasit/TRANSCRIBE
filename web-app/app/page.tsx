@@ -5,27 +5,48 @@ import AudioRecorder from '@/components/AudioRecorder';
 import FileUpload from '@/components/FileUpload';
 import URLTranscribe from '@/components/URLTranscribe';
 import TranscriptDisplay from '@/components/TranscriptDisplay';
+import NotificationToggle from '@/components/NotificationToggle';
 import { Transcript } from '@/lib/types';
+import { generateJobId, sendCompletionNotification, clearNotificationPreference } from '@/lib/notifications';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<'record' | 'upload' | 'url'>('record');
   const [transcript, setTranscript] = useState<Transcript | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showCompletionRitual, setShowCompletionRitual] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const [processingStartTime, setProcessingStartTime] = useState<number>(0);
   const transcriptRef = useRef<HTMLDivElement>(null);
+
+  // Track when processing starts
+  useEffect(() => {
+    if (isTranscribing) {
+      const jobId = generateJobId();
+      setCurrentJobId(jobId);
+      setProcessingStartTime(Date.now());
+    }
+  }, [isTranscribing]);
 
   // Completion ritual: when transcription finishes
   useEffect(() => {
     if (transcript && !isTranscribing) {
       setShowCompletionRitual(true);
+
+      // Send notification if user opted in
+      if (currentJobId) {
+        sendCompletionNotification(currentJobId);
+        clearNotificationPreference(currentJobId);
+      }
+
       const timer = setTimeout(() => {
         setShowCompletionRitual(false);
         // Smooth scroll to transcript
         transcriptRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 600);
+
       return () => clearTimeout(timer);
     }
-  }, [transcript, isTranscribing]);
+  }, [transcript, isTranscribing, currentJobId]);
 
   return (
     <main className="min-h-screen bg-dawt-background">
@@ -96,6 +117,11 @@ export default function Home() {
               isTranscribing={isTranscribing}
               setIsTranscribing={setIsTranscribing}
             />
+          )}
+
+          {/* Notification Toggle - shown during processing */}
+          {isTranscribing && currentJobId && processingStartTime > 0 && (
+            <NotificationToggle jobId={currentJobId} processingStartTime={processingStartTime} />
           )}
         </div>
 
