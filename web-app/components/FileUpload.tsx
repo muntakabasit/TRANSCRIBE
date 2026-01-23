@@ -97,14 +97,14 @@ export default function FileUpload({ onTranscript, isTranscribing, setIsTranscri
         <input
           ref={fileInputRef}
           type="file"
-          accept="audio/*,video/*"
+          accept="audio/*,video/*,.mp3,.wav,.m4a,.mp4,.mov,.avi,.mkv,.webm,.ogg,.aac,.flac"
           onChange={handleFileSelect}
           disabled={isTranscribing}
           className="hidden"
-          id="audio-file-input"
+          id="media-file-input"
         />
         <label
-          htmlFor="audio-file-input"
+          htmlFor="media-file-input"
           className={`block w-full px-4 py-8 rounded-lg border-2 border-dashed border-dawt-divider bg-dawt-card text-center cursor-pointer transition-colors hover:border-dawt-accent hover:bg-gray-50 ${
             isTranscribing ? 'opacity-50 cursor-not-allowed' : ''
           }`}
