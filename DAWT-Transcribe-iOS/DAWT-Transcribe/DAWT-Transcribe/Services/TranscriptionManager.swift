@@ -2,9 +2,8 @@
 //  TranscriptionManager.swift
 //  DAWT-Transcribe
 //
-//  Service for managing transcription with WhisperKit
-//  NOTE: This uses WhisperKit for on-device transcription
-//  Install via: File > Add Package Dependencies > https://github.com/argmaxinc/WhisperKit
+//  Service for managing transcription with premium 3-step progress
+//  NOTE: This uses API backend for transcription
 //
 
 import Foundation
@@ -14,10 +13,11 @@ import Combine
 class TranscriptionManager: ObservableObject {
     @Published var currentTranscription: Transcription?
     @Published var isTranscribing = false
+    @Published var notifyWhenReady = false  // Optional notification toggle
 
-    // MARK: - Transcription
+    // MARK: - Transcription with 3-Step Progress
 
-    func transcribe(audioURL: URL, sourceType: SourceType = .file) async {
+    func transcribe(audioURL: URL, sourceType: SourceType = .file, isVideoSource: Bool = false) async {
         // Start background task
         BackgroundTaskManager.shared.beginBackgroundTask(name: "Transcription")
 
@@ -27,19 +27,33 @@ class TranscriptionManager: ObservableObject {
                 date: Date(),
                 sourceFile: audioURL.lastPathComponent,
                 sourceType: sourceType,
-                state: .transcribing
+                state: isVideoSource ? .extractingAudio : .preparing
             )
         }
 
         do {
+            // Step 1: Preparing (0.33 progress)
+            if !isVideoSource {
+                await updateState(.preparing)
+                try await Task.sleep(nanoseconds: 500_000_000) // 0.5s for UX smoothness
+            }
+
             // Get audio duration
             let asset = AVAsset(url: audioURL)
             let duration = try await asset.load(.duration).seconds
+
+            // Step 2: Listening (0.66 progress)
+            await updateState(.listening)
 
             // Use backend API for transcription
             let response = try await APIClient.transcribeAudioFile(audioURL: audioURL)
             let segments = APIClient.convertToSegments(from: response)
 
+            // Step 3: Structuring (0.85 progress)
+            await updateState(.structuring)
+            try await Task.sleep(nanoseconds: 300_000_000) // 0.3s for UX smoothness
+
+            // Complete
             await MainActor.run {
                 let baseTranscription = currentTranscription ?? Transcription()
                 currentTranscription = Transcription(
@@ -57,8 +71,10 @@ class TranscriptionManager: ObservableObject {
                 isTranscribing = false
             }
 
-            // Notify user if app is backgrounded
-            BackgroundTaskManager.shared.notifyTranscriptionComplete(success: true)
+            // Notify user if opted in and app is backgrounded
+            if notifyWhenReady {
+                BackgroundTaskManager.shared.notifyTranscriptionComplete(success: true)
+            }
 
         } catch {
             await MainActor.run {
@@ -78,12 +94,22 @@ class TranscriptionManager: ObservableObject {
                 isTranscribing = false
             }
 
-            // Notify user of failure if app is backgrounded
-            BackgroundTaskManager.shared.notifyTranscriptionComplete(success: false)
+            // Notify user of failure if opted in and backgrounded
+            if notifyWhenReady {
+                BackgroundTaskManager.shared.notifyTranscriptionComplete(success: false)
+            }
         }
 
         // End background task
         BackgroundTaskManager.shared.endBackgroundTask()
+    }
+
+    private func updateState(_ state: TranscriptionState) async {
+        await MainActor.run {
+            guard var transcription = currentTranscription else { return }
+            transcription.state = state
+            currentTranscription = transcription
+        }
     }
 
     // MARK: - Stub Implementation (Phase 1)
@@ -142,6 +168,7 @@ class TranscriptionManager: ObservableObject {
     func reset() {
         currentTranscription = nil
         isTranscribing = false
+        notifyWhenReady = false
     }
 }
 
