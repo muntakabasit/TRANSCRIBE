@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AudioRecorder from '@/components/AudioRecorder';
 import FileUpload from '@/components/FileUpload';
 import URLTranscribe from '@/components/URLTranscribe';
@@ -11,6 +11,21 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'record' | 'upload' | 'url'>('record');
   const [transcript, setTranscript] = useState<Transcript | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [showCompletionRitual, setShowCompletionRitual] = useState(false);
+  const transcriptRef = useRef<HTMLDivElement>(null);
+
+  // Completion ritual: when transcription finishes
+  useEffect(() => {
+    if (transcript && !isTranscribing) {
+      setShowCompletionRitual(true);
+      const timer = setTimeout(() => {
+        setShowCompletionRitual(false);
+        // Smooth scroll to transcript
+        transcriptRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [transcript, isTranscribing]);
 
   return (
     <main className="min-h-screen bg-dawt-background">
@@ -84,9 +99,22 @@ export default function Home() {
           )}
         </div>
 
+        {/* Completion Ritual */}
+        {showCompletionRitual && (
+          <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center pointer-events-none z-50 transition-opacity duration-600">
+            <div className="bg-white rounded-full p-4 shadow-lg animate-pulse">
+              <svg className="w-12 h-12 text-dawt-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+        )}
+
         {/* Transcript Display */}
         {transcript && (
-          <TranscriptDisplay transcript={transcript} />
+          <div ref={transcriptRef}>
+            <TranscriptDisplay transcript={transcript} />
+          </div>
         )}
 
         {/* Footer */}

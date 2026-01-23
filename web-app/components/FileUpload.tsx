@@ -20,16 +20,21 @@ export default function FileUpload({ onTranscript, isTranscribing, setIsTranscri
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Check file type
-      const validTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a', 'audio/webm', 'audio/ogg'];
-      if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|webm|ogg)$/i)) {
-        setError('Please select a valid audio file (MP3, WAV, M4A, WebM, OGG)');
+      // Check file type - support both audio and video
+      const validAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/m4a', 'audio/webm', 'audio/ogg', 'audio/aac', 'audio/flac'];
+      const validVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+      const validTypes = [...validAudioTypes, ...validVideoTypes];
+
+      const isValidExtension = /\.(mp3|wav|m4a|webm|ogg|aac|flac|mp4|mov|avi|mkv)$/i.test(file.name);
+
+      if (!validTypes.includes(file.type) && !isValidExtension) {
+        setError('Please select a valid audio or video file (MP3, WAV, M4A, MP4, MOV, etc.)');
         return;
       }
 
-      // Check file size (max 50MB)
-      if (file.size > 50 * 1024 * 1024) {
-        setError('File size must be less than 50MB');
+      // Check file size (max 100MB for video)
+      if (file.size > 100 * 1024 * 1024) {
+        setError('File size must be less than 100MB');
         return;
       }
 
@@ -87,12 +92,12 @@ export default function FileUpload({ onTranscript, isTranscribing, setIsTranscri
 
       <div>
         <label className="block text-[13px] font-medium tracking-wide text-dawt-text-secondary mb-2">
-          AUDIO FILE
+          MEDIA FILE
         </label>
         <input
           ref={fileInputRef}
           type="file"
-          accept="audio/*"
+          accept="audio/*,video/*"
           onChange={handleFileSelect}
           disabled={isTranscribing}
           className="hidden"
@@ -116,9 +121,9 @@ export default function FileUpload({ onTranscript, isTranscribing, setIsTranscri
             </div>
           ) : (
             <div>
-              <p className="text-base font-medium text-dawt-text-primary">Choose audio file</p>
+              <p className="text-base font-medium text-dawt-text-primary">Choose audio or video</p>
               <p className="text-[11px] text-dawt-text-secondary mt-1">
-                MP3, WAV, M4A, WebM, OGG (max 50MB)
+                MP3, WAV, M4A, MP4, MOV (max 100MB)
               </p>
             </div>
           )}
