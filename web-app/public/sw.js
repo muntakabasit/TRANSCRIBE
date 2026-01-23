@@ -1,5 +1,5 @@
 // Service Worker for DAWT-Transcribe PWA
-const CACHE_NAME = 'dawt-transcribe-v1';
+const CACHE_NAME = 'dawt-transcribe-v2';
 const urlsToCache = [
   '/',
   '/manifest.json',
@@ -7,11 +7,12 @@ const urlsToCache = [
   '/icon-512.png',
 ];
 
-// Install service worker
+// Install service worker and skip waiting
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -23,7 +24,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Clean up old caches
+// Clean up old caches and take control immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -34,6 +35,6 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
