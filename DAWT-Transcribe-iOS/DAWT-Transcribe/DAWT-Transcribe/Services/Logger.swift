@@ -16,6 +16,7 @@ enum DAWTLogger {
     static let audio = Logger(subsystem: subsystem, category: "audio")
     static let storage = Logger(subsystem: subsystem, category: "storage")
     static let sharing = Logger(subsystem: subsystem, category: "sharing")
+    static let system = Logger(subsystem: subsystem, category: "system")
 
     #if DEBUG
     static var isDebugEnabled = true
