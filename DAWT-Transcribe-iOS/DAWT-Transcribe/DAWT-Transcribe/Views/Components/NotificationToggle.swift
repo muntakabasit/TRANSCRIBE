@@ -63,8 +63,7 @@ struct NotificationToggle: View {
 
 #Preview {
     VStack(spacing: 16) {
-        NotificationToggle(isEnabled: .constant(false))
-        NotificationToggle(isEnabled: .constant(true))
+        NotificationToggle()
     }
     .padding()
     .background(Color(white: 0.95))
