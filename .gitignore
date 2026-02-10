@@ -68,3 +68,9 @@ yarn.lock
 .expo/
 .expo-shared/
 web-build/
+
+# Xcode
+DerivedData/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
