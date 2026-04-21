@@ -11,7 +11,7 @@ class APIClient {
     // MARK: - Configuration
 
     // Production URL (Fly.io deployment)
-    static let baseURL = "https://transcribe-h3f8nq.fly.dev"
+    static let baseURL = "http://192.168.0.90:5001"
 
     // Development: Local network (uncomment for local testing)
     // static let baseURL = "http://172.20.10.2:5001"
@@ -36,6 +36,25 @@ class APIClient {
         let start: Double
         let end: Double
         let text: String
+    }
+
+    // Extract a human-readable error message from a non-200 response body
+    private static func extractServerMessage(from data: Data, statusCode: Int) -> APIError {
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            // FastAPI HTTPException: { "detail": "string" } or { "detail": { "message": "..." } }
+            if let detail = json["detail"] as? String {
+                return .transcriptionFailed(detail)
+            }
+            if let detail = json["detail"] as? [String: Any],
+               let message = detail["message"] as? String {
+                return .transcriptionFailed(message)
+            }
+            // Direct error field
+            if let message = json["message"] as? String {
+                return .transcriptionFailed(message)
+            }
+        }
+        return .serverError(statusCode)
     }
 
     static func transcribeURL(url: String, language: String = "en") async throws -> TranscribeResponse {
@@ -64,7 +83,7 @@ class APIClient {
         }
 
         guard httpResponse.statusCode == 200 else {
-            throw APIError.serverError(httpResponse.statusCode)
+            throw extractServerMessage(from: data, statusCode: httpResponse.statusCode)
         }
 
         let transcribeResponse = try JSONDecoder().decode(TranscribeResponse.self, from: data)
@@ -136,7 +155,7 @@ class APIClient {
         }
 
         guard httpResponse.statusCode == 200 else {
-            throw APIError.serverError(httpResponse.statusCode)
+            throw extractServerMessage(from: data, statusCode: httpResponse.statusCode)
         }
 
         let transcribeResponse = try JSONDecoder().decode(TranscribeResponse.self, from: data)
