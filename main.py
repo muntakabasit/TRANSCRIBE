@@ -234,6 +234,49 @@ def build_ydl_opts(url: str, db: Session) -> dict:
     
     return ydl_opts
 
+
+def _fallback_opts_chain(url: str, db: Session) -> list:
+    """Ordered list of ydl option dicts to try; primary first, then fallbacks."""
+    base = build_ydl_opts(url, db)
+    chain = [base]
+    if "instagram.com" in url:
+        # Fallback 1: iphone API — different CDN path from graphql, survives more rate-limits
+        chain.append({**base, "extractor_args": {"instagram": {"api_type": "iphone"}}})
+        # Fallback 2: no extractor_args — let yt-dlp choose its own default extraction path
+        chain.append({k: v for k, v in base.items() if k != "extractor_args"})
+    else:
+        # Generic fallback: relax audio-only constraint for platforms without dedicated streams
+        chain.append({**base, "format": "best"})
+    return chain
+
+
+def download_audio(url: str, db: Session, request_id: str) -> tuple:
+    """Try each option set in the fallback chain. Raises HTTPException only after all fail."""
+    chain = _fallback_opts_chain(url, db)
+    last_err = None
+    for attempt, opts in enumerate(chain, start=1):
+        label = "primary" if attempt == 1 else f"fallback-{attempt - 1}"
+        logger.info(f"[{request_id}] Download attempt {attempt}/{len(chain)} ({label})")
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                path = ydl.prepare_filename(info)
+            logger.info(f"[{request_id}] Audio downloaded successfully ({label})")
+            return path, info
+        except Exception as e:
+            last_err = e
+            logger.warning(f"[{request_id}] Attempt {attempt} failed: {e}")
+    logger.error(f"[{request_id}] All {len(chain)} download attempts failed. Last: {last_err}")
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "error": "download_failed",
+            "message": "Could not download audio from URL after multiple attempts.",
+            "request_id": request_id,
+        },
+    )
+
+
 @app.get("/health")
 async def health_check():
     return JSONResponse({
@@ -343,22 +386,7 @@ async def transcribe(request: TranscribeRequest, db: Session = Depends(get_db)):
         if request.url:
             logger.info(f"[{request_id}] Downloading audio from URL...")
             is_temp_file = True
-            ydl_opts = build_ydl_opts(request.url, db)
-            try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(request.url, download=True)
-                    audio_path = ydl.prepare_filename(info)
-                logger.info(f"[{request_id}] Audio downloaded successfully")
-            except Exception as e:
-                logger.error(f"[{request_id}] Download failed: {str(e)}")
-                raise HTTPException(
-                    status_code=400,
-                    detail={
-                        "error": "download_failed",
-                        "message": "Could not download audio from URL. Check URL validity.",
-                        "request_id": request_id
-                    }
-                )
+            audio_path, _ = download_audio(request.url, db, request_id)
         else:
             audio_path = request.file_path
         
