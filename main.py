@@ -10,6 +10,7 @@ import re
 import uuid
 import logging
 import shutil
+import subprocess
 import errno
 import requests
 from pydantic import BaseModel, validator
@@ -342,7 +343,10 @@ os.makedirs(_YDL_CACHE_DIR, exist_ok=True)
 def build_ydl_opts(url: str, db: Session) -> dict:
     """Build yt-dlp options with Instagram cookie injection if available"""
     ydl_opts = {
-        'format': 'bestaudio/best',
+        # Prefer formats with a real audio codec.
+        # TikTok sometimes yields "best" formats that are image-only or silent;
+        # requiring acodec!=none filters those out before ffprobe validation.
+        'format': 'bestaudio[acodec!=none]/best[acodec!=none]/bestaudio/best',
         'outtmpl': os.path.join(tempfile.gettempdir(), '%(extractor)s-%(id)s.%(ext)s'),
         # Pin cache to the project-owned .cache dir.
         # ~/.cache is root-owned on this Mac mini, which prevents yt_dlp from
@@ -637,6 +641,118 @@ def probe_failure_message(platform: str) -> str:
     return "Could not inspect this URL. Check that the link is public and try again."
 
 
+TIKTOK_FAILURE_MESSAGES = {
+    "no_usable_audio": "No usable audio found in this TikTok video. If you saved the video, try From Photos video.",
+    "download_failed": "Couldn't download this TikTok link. If the video is saved on your phone, try From Photos video.",
+    "unsupported_media": "This TikTok video couldn't be prepared for transcription. Try saving it to Photos or importing the file.",
+    "timeout": "TikTok took too long to respond. Try again, or use From Photos video if the video is saved.",
+    "no_clear_speech": "No clear speech was found in this TikTok audio.",
+}
+
+
+def tiktok_failure_message(failure_code: str) -> str:
+    return TIKTOK_FAILURE_MESSAGES.get(failure_code, TIKTOK_FAILURE_MESSAGES["unsupported_media"])
+
+
+def platform_failure_message(url: str, failure_code: str, default_message: str) -> str:
+    if guess_platform(url) == "tiktok":
+        return tiktok_failure_message(failure_code)
+    return default_message
+
+
+def probe_media_audio_stream(media_path: str, timeout_seconds: int = 12) -> Dict[str, Any]:
+    """Return whether ffprobe can see at least one audio stream in downloaded media."""
+    if not media_path or not os.path.exists(media_path):
+        return {"ok": False, "has_audio": False, "failure": "missing_file",
+                "message": "Media file is missing before audio validation."}
+
+    ffprobe_path = shutil.which("ffprobe")
+    if not ffprobe_path:
+        return {"ok": False, "has_audio": False, "failure": "ffprobe_missing",
+                "message": "ffprobe is not installed or not on PATH."}
+
+    command = [
+        ffprobe_path, "-v", "error",
+        "-select_streams", "a",
+        "-show_entries", "stream=codec_type,codec_name,duration",
+        "-of", "json",
+        media_path,
+    ]
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True,
+                                   timeout=timeout_seconds, check=False)
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "has_audio": False, "failure": "probe_timeout",
+                "message": "Audio validation timed out."}
+    except Exception as e:
+        return {"ok": False, "has_audio": False, "failure": "probe_error", "message": str(e)}
+
+    if completed.returncode != 0:
+        return {"ok": False, "has_audio": False, "failure": "probe_failed",
+                "message": completed.stderr.strip() or "ffprobe could not inspect this media."}
+
+    try:
+        parsed = json.loads(completed.stdout or "{}")
+    except json.JSONDecodeError:
+        return {"ok": False, "has_audio": False, "failure": "invalid_probe_json",
+                "message": "ffprobe returned invalid JSON."}
+
+    streams = parsed.get("streams") or []
+    has_audio = any(s.get("codec_type") == "audio" for s in streams)
+    return {"ok": True, "has_audio": has_audio,
+            "failure": None if has_audio else "no_audio_stream", "streams": streams}
+
+
+def require_usable_audio_or_raise(media_path: str, source_url: str, request_id: str):
+    """Raise HTTPException if ffprobe finds no audio stream — blocks Whisper on silent media."""
+    probe = probe_media_audio_stream(media_path)
+    if probe.get("ok") and probe.get("has_audio"):
+        logger.info(f"[{request_id}] Audio probe passed")
+        return
+
+    failure = probe.get("failure")
+    logger.warning(f"[{request_id}] Audio probe blocked Whisper: {failure}")
+
+    if failure == "no_audio_stream":
+        failure_code, status_code = "no_usable_audio", 400
+        default_message = "No usable audio found in this media."
+    else:
+        failure_code, status_code = "unsupported_media", 400
+        default_message = "This media could not be prepared for transcription."
+
+    raise HTTPException(
+        status_code=status_code,
+        detail={
+            "error": failure_code,
+            "message": platform_failure_message(source_url, failure_code, default_message),
+            "request_id": request_id,
+        },
+    )
+
+
+def job_has_usable_audio_or_fail(job: TranscriptionJob, db: Session,
+                                  media_path: str, source_url: str) -> bool:
+    """Return True if audio probe passes; mark job failed and return False otherwise."""
+    probe = probe_media_audio_stream(media_path)
+    if probe.get("ok") and probe.get("has_audio"):
+        logger.info(f"[{job.id}] Audio probe passed")
+        return True
+
+    failure = probe.get("failure")
+    logger.warning(f"[{job.id}] Audio probe blocked Whisper: {failure}")
+
+    if failure == "no_audio_stream":
+        failure_code = "no_usable_audio"
+        default_message = "No usable audio found in this media."
+    else:
+        failure_code = "unsupported_media"
+        default_message = "This media could not be prepared for transcription."
+
+    fail_job(job, db, failure_code,
+             platform_failure_message(source_url, failure_code, default_message))
+    return False
+
+
 def classify_download_error(url: str, error_str: str) -> tuple[str, str]:
     """
     Map a yt_dlp / download exception string to a stable (error_code, user_message) pair.
@@ -791,7 +907,11 @@ async def transcribe(request: TranscribeRequest, db: Session = Depends(get_db)):
                     "request_id": request_id
                 }
             )
-        
+
+        # ffprobe audio gate — reject before Whisper if no audio stream present
+        if is_temp_file and request.url:
+            require_usable_audio_or_raise(audio_path, request.url, request_id)
+
         logger.info(f"[{request_id}] Starting Whisper transcription...")
         whisper_start = time.time()
         
@@ -929,6 +1049,10 @@ def process_transcription_background(job_id: str, url: str, lang: str):
                         fail_job(job, db, "download_failed", download_failure_message(url, ydl_error_str))
                     return
 
+            # ffprobe audio gate — reject before Whisper if no audio stream present
+            if not job_has_usable_audio_or_fail(job, db, audio_path, url):
+                return
+
             # Check video duration (limit to 21 minutes to prevent crashes)
             video_duration = info.get('duration', 0) if info else 0
             max_duration = 1260  # 21 minutes (buffer for ~20 min videos)
@@ -953,6 +1077,13 @@ def process_transcription_background(job_id: str, url: str, lang: str):
             
             segments = [{"start": seg['start'], "end": seg['end'], "text": seg['text']} for seg in result['segments']]
             full_text = result["text"]
+
+            # Reject empty / unintelligible output — Whisper succeeded but found no speech
+            if not full_text or not full_text.strip():
+                fail_job(job, db, "no_clear_speech",
+                         platform_failure_message(url, "no_clear_speech",
+                                                  "No clear speech was found in this audio."))
+                return
 
             # Cleanup
             if audio_path and os.path.exists(audio_path):
