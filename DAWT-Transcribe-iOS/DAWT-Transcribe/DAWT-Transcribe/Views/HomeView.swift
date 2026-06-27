@@ -15,6 +15,7 @@ struct HomeView: View {
 
     @State private var showingActionSheet = false
     @State private var showingRecordingView = false
+    @State private var showingPhotosVideoSheet = false
     @State private var showingURLSheet = false
     @State private var showingHistory = false
     @State private var navigateToResult = false
@@ -101,6 +102,9 @@ struct HomeView: View {
                 Button("Import Audio File") {
                     audioImporter.presentPicker()
                 }
+                Button("From Photos video") {
+                    showingPhotosVideoSheet = true
+                }
                 Button("Transcribe from Link") {
                     showingURLSheet = true
                 }
@@ -120,6 +124,18 @@ struct HomeView: View {
                     isPresented: $audioImporter.isPresented,
                     onPick: audioImporter.handleImport
                 )
+            }
+            .sheet(isPresented: $showingPhotosVideoSheet) {
+                PhotosVideoImportSheet(
+                    onImport: { url in
+                        audioImporter.handleImport(result: .success([url]))
+                    },
+                    onFailure: { message in
+                        urlErrorMessage = message
+                        showingURLError = true
+                    }
+                )
+                .presentationDetents([.medium])
             }
             .sheet(isPresented: $showingURLSheet) {
                 URLTranscriptionSheet(isPresented: $showingURLSheet) { url in
