@@ -1,7 +1,9 @@
 fastapi==0.104.1
 uvicorn==0.24.0
-openai-whisper==20231117
-yt-dlp==2024.10.22
+# openai-whisper must be installed from git on Python 3.11+ (pypi release has build issues):
+# pip install git+https://github.com/openai/whisper.git
+openai-whisper @ git+https://github.com/openai/whisper.git
+yt-dlp==2026.03.17
 python-multipart==0.0.6
 requests>=2.32.2
 python-dotenv>=1.0.1
