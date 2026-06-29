@@ -8,16 +8,24 @@
 import SwiftUI
 
 struct TranscriptionResultView: View {
+    struct PreparedSharePayload: Identifiable {
+        let id = UUID()
+        let activityItems: [Any]
+    }
+
     let transcription: Transcription
     @ObservedObject var transcriptionStore: TranscriptionStore
     let onNewTranscription: () -> Void
 
-    @State private var showingShareSheet = false
-    @State private var shareItems: [Any] = []
+    @State private var preparedSharePayload: PreparedSharePayload?
     @State private var showingToast = false
-    @State private var shareItemsPrepared = false
+    @State private var showingNoTranscriptAlert = false
 
     @Environment(\.dismiss) private var dismiss
+
+    static let noTranscriptPlaceholder = "No transcript available"
+    static let noTranscriptShareTitle = "No transcript to share"
+    static let noTranscriptShareMessage = "This item does not contain a completed transcript yet."
 
     var body: some View {
         ZStack {
@@ -120,32 +128,54 @@ struct TranscriptionResultView: View {
             ToastView(message: "Shared", isShowing: $showingToast)
         }
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareItems) {
+        .sheet(item: $preparedSharePayload, onDismiss: {
+            preparedSharePayload = nil
+        }) { payload in
+            ShareSheet(items: payload.activityItems) {
                 showingToast = true
             }
+        }
+        .alert(Self.noTranscriptShareTitle, isPresented: $showingNoTranscriptAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(Self.noTranscriptShareMessage)
         }
     }
 
     private func shareTranscription() {
-        // CRITICAL: Always ensure items exist before presenting
-        if shareItems.isEmpty {
-            let items = TranscriptExporter.prepareShareItems(transcription: transcription)
-
-            if items.isEmpty {
-                shareItems = [TranscriptExporter.getPlainText(transcription: transcription)]
-            } else {
-                shareItems = items
-            }
-            shareItemsPrepared = true
+        guard let payload = Self.prepareSharePayload(for: transcription) else {
+            showingNoTranscriptAlert = true
+            return
         }
 
-        // Final safety check
-        if shareItems.isEmpty {
-            shareItems = [TranscriptExporter.getPlainText(transcription: transcription)]
+        preparedSharePayload = payload
+    }
+
+    static func canonicalTranscriptText(for transcription: Transcription) -> String? {
+        let text = transcription.segments
+            .map(\.text)
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !text.isEmpty, text != noTranscriptPlaceholder else {
+            return nil
         }
 
-        showingShareSheet = true
+        return text
+    }
+
+    static func prepareSharePayload(for transcription: Transcription) -> PreparedSharePayload? {
+        guard canonicalTranscriptText(for: transcription) != nil else {
+            return nil
+        }
+
+        let items = TranscriptExporter.prepareShareItems(transcription: transcription)
+        guard !items.isEmpty else {
+            assertionFailure("Prepared share payload was empty for a valid transcript.")
+            return nil
+        }
+
+        return PreparedSharePayload(activityItems: items)
     }
 }
 

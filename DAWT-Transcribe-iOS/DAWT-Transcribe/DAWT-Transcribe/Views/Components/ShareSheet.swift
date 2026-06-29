@@ -12,12 +12,14 @@ struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     let onDismiss: () -> Void
 
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        // Safety check
-        let shareItems = items.isEmpty ? ["No content to share"] : items
+    func makeUIViewController(context: Context) -> UIViewController {
+        guard !items.isEmpty else {
+            assertionFailure("ShareSheet received empty activity items.")
+            return UIViewController()
+        }
 
         let controller = UIActivityViewController(
-            activityItems: shareItems,
+            activityItems: items,
             applicationActivities: nil
         )
 
@@ -30,7 +32,7 @@ struct ShareSheet: UIViewControllerRepresentable {
         return controller
     }
 
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
         // No updates needed
     }
 }
